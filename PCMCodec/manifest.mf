@@ -1,0 +1,5 @@
+Manifest-Version: 1.0
+OpenIDE-Module: com.digithree.codecs.pcm
+OpenIDE-Module-Localizing-Bundle: com/digithree/codecs/pcm/Bundle.properties
+OpenIDE-Module-Specification-Version: 1.0
+

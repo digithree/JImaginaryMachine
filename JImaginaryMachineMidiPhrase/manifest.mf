@@ -1,0 +1,5 @@
+Manifest-Version: 1.0
+OpenIDE-Module: com.jimaginary.machine.midi.phrase
+OpenIDE-Module-Localizing-Bundle: com/jimaginary/machine/midi/phrase/Bundle.properties
+OpenIDE-Module-Specification-Version: 1.0
+
