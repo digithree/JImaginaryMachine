@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.jimaginary.machine.graph.viewer;
+package com.jimaginary.machine.graph.selector;
 
 import java.awt.BorderLayout;
 import org.netbeans.api.settings.ConvertAsProperties;
@@ -69,7 +69,7 @@ public final class GraphSelectorTopComponent extends TopComponent
         setDisplayName("Graph Selector");
         
         //mgr.setRootContext(new AbstractNode(Children.create(gtpHead, true)));
-        mgr.setRootContext(new GraphTypeNode());
+        mgr.setRootContext(new SelectionListItemNode());
     }
 
     /**

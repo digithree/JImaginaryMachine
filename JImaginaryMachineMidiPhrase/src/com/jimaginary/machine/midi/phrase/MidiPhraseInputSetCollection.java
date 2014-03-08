@@ -77,6 +77,13 @@ public final class MidiPhraseInputSetCollection extends SetCollection {
 
     private final float []MODIFY_NODE_SELECTION_PROB = { 0.4f, 0.2f, 0.2f, 0.2f };
     public int key, mode;
+    
+    private static String []inNodes = { "MidiNoteSampleNode", 
+                                        "MidiKeyTypeModifyNode",
+                                        "MidiKeyModifyNode",
+                                        "MidiModeModifyNode",
+                                        "MidiRangeModifyNode"  
+                                       };
 
     public MidiPhraseInputSetCollection() {
         super();
@@ -103,6 +110,19 @@ public final class MidiPhraseInputSetCollection extends SetCollection {
         rangeAll = false;
         rangeStart = 5;		// 3rd octave
         rangeLength = 2;	// two octave in length
+    }
+    
+    // registration with system
+    public static String getName() {
+        return "MidiPhraseInputSetCollection";
+    }
+    
+    public static String[] getInNodesNames() {
+        return inNodes;
+    }
+    
+    public static String[] getOutNodesNames() {
+        return null;
     }
 
     @Override

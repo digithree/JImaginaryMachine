@@ -19,6 +19,8 @@ public final class MidiPhraseOutputSetCollection extends SetCollection {
     MidiCodec midiCodec;
     MidiPlayer midiPlayer;
     int numPhrases, phraseLength;
+    
+    private static String []outNodes = { "MidiNoteWriteNode", "MidiPhraseChooseModifyNode" };
 
     public MidiPhraseOutputSetCollection( int _numPhrases, int _phraseLength ) {
         super();
@@ -43,6 +45,19 @@ public final class MidiPhraseOutputSetCollection extends SetCollection {
         }
         currentSet = sets.get(0);
         midiCodec = new MidiCodec();
+    }
+    
+    // registration with system
+    public static String getName() {
+        return "MidiPhraseOutputSetCollection";
+    }
+    
+    public static String[] getInNodesNames() {
+        return null;
+    }
+    
+    public static String[] getOutNodesNames() {
+        return outNodes;
     }
 
     @Override

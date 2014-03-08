@@ -48,6 +48,19 @@ public class SetCollection {
     public void init() {
         // custom stuff for reset
     }
+    
+    // registration with system, use string literals
+    public static String getName() {
+        return "[SetCollection]";
+    }
+    
+    public static String[] getInNodesNames() {
+        return null;
+    }
+    
+    public static String[] getOutNodesNames() {
+        return null;
+    }
 
     // --- SET ACCESS ---
     // - IO

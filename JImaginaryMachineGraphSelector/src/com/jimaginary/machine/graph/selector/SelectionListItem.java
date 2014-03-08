@@ -4,7 +4,7 @@
  * and open the template in the editor.
  */
 
-package com.jimaginary.machine.api;
+package com.jimaginary.machine.graph.selector;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
@@ -16,57 +16,41 @@ import java.util.List;
  *
  * @author simonkenny
  */
-public class GraphType {
+public class SelectionListItem {
     public static final int GRAPH = 0;
     public static final int IN_NODE = 1;
     public static final int OUT_NODE = 2;
     
-    SetCollection inputCollection;
-    SetCollection outputCollection;
-    GraphNode []inNodes;
-    GraphNode []outNodes;
     String name;
     int type;
+    String description;
     
-    public GraphType() {
+    public SelectionListItem() {
         name = "[GraphType]";
     }
     
     // setters
-    public GraphType setType(int _type) {
+    public SelectionListItem setType(int _type) {
         type = _type;
         return this;
     }
     
-    public GraphType setTypeInteger(Integer _type) {
+    public SelectionListItem setTypeInteger(Integer _type) {
         int oldType = type;
         type = _type.intValue();
         fire("type", oldType, type);
         return this;
     }
     
-    public GraphType setName(String _name) {
+    public SelectionListItem setName(String _name) {
         String oldName = name;
         name = _name;
         fire("name", oldName, name);
         return this;
     }
     
-    public GraphType setInputCollection(SetCollection in) {
-        inputCollection = in;
-        inNodes = null;
-        if( inputCollection != null ) {
-            inNodes = inputCollection.generateAllNodes();
-        }
-        return this;
-    }
-    
-    public GraphType setOutputCollection(SetCollection out) {
-        outputCollection = out;
-        outNodes = null;
-        if( outputCollection != null ) {
-            outNodes = outputCollection.generateAllNodes();
-        }
+    public SelectionListItem setDescription(String _description) {
+        description = _description;
         return this;
     }
     
@@ -88,36 +72,11 @@ public class GraphType {
         return name;
     }
     
-    public SetCollection getInputCollection() {
-        return inputCollection;
+    public String getDescription() {
+        return description;
     }
     
-    public SetCollection getOutputCollection() {
-        return outputCollection;
-    }
-    
-    public GraphNode[] getInGraphNodes() {
-        return inNodes;
-    }
-    
-    public GraphNode[] getOutGraphNodes() {
-        return outNodes;
-    }
-    
-    public GraphNode[] getAllGraphNodes() {
-        if( inNodes != null && outNodes == null ) {
-            return inNodes;
-        } else if( inNodes == null && outNodes != null ) {
-            return outNodes;
-        } else if( inNodes != null && outNodes != null ) {
-            GraphNode[] retNodes = new GraphNode[inNodes.length+outNodes.length];
-            System.arraycopy(inNodes, 0, retNodes, 0, inNodes.length);
-            System.arraycopy(outNodes, 0, retNodes, inNodes.length, outNodes.length);
-            return retNodes;
-        }
-        return null;
-    }
-    
+    // property change listener
     private List listeners = Collections.synchronizedList(new LinkedList());
 
     public void addPropertyChangeListener (PropertyChangeListener pcl) {

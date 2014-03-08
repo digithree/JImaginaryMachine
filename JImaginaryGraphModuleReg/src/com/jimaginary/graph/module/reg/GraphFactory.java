@@ -7,7 +7,6 @@
 package com.jimaginary.graph.module.reg;
 
 import com.jimaginary.machine.api.Graph;
-import com.jimaginary.machine.api.GraphType;
 import com.jimaginary.machine.midi.phrase.MidiPhraseInputSetCollection;
 import com.jimaginary.machine.midi.phrase.MidiPhraseOutputSetCollection;
 
@@ -43,33 +42,51 @@ public class GraphFactory {
         return graph;
     }
     
+    public static String getGraphDescription(int type) {
+        switch(type) {
+            case GRAPH_MIDI_PHRASE_BUILDER:
+                return "Enables the creation of tonal, modal or chromatic phrases within the diatonic tone system and represented in the MIDI format.";
+        }
+        return "[no description set]";
+    }
+    
+    public static String getInputSetCollectionName(int type) {
+        switch(type) {
+            case GRAPH_MIDI_PHRASE_BUILDER:
+                return MidiPhraseInputSetCollection.getName();
+        }
+        return null;
+    }
+    
+    public static String getOutputSetCollectionName(int type) {
+        switch(type) {
+            case GRAPH_MIDI_PHRASE_BUILDER:
+                return MidiPhraseOutputSetCollection.getName();
+        }
+        return null;
+    }
+    
+    public static String[] getInputSetCollectionNodeNames(int type) {
+        switch(type) {
+            case GRAPH_MIDI_PHRASE_BUILDER:
+                return MidiPhraseInputSetCollection.getInNodesNames();
+        }
+        return null;
+    }
+    
+    public static String[] getOutputSetCollectionNodeNames(int type) {
+        switch(type) {
+            case GRAPH_MIDI_PHRASE_BUILDER:
+                return MidiPhraseOutputSetCollection.getOutNodesNames();
+        }
+        return null;
+    }
+    
     public static boolean randomiseGraph(Graph graph) {
         if( graph != null ) {
             graph.generateRandom(MIN_NUM_NODES, MAX_NUM_NODES);
             return true;
         }
         return false;
-    }
-    
-    public static GraphType createType(int type) {
-        GraphType gt = new GraphType().setType(GraphType.GRAPH);
-        switch(type) {
-            case GRAPH_MIDI_PHRASE_BUILDER:
-                gt.setName(graphTypeNames[type])
-                    .setInputCollection(new MidiPhraseInputSetCollection())
-                    .setOutputCollection(new MidiPhraseOutputSetCollection(DEFAULT_NUM_PHRASES,DEFAULT_PHRASE_LEN))
-                    ;
-                break;
-            case 1:
-                gt.setName(graphTypeNames[type]);
-                break;
-            case 2:
-                gt.setName(graphTypeNames[type]);
-                break;
-            case 3:
-                gt.setName(graphTypeNames[type]);
-                break;
-        }       
-        return gt;
     }
 }

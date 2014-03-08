@@ -4,15 +4,17 @@
  * and open the template in the editor.
  */
 
-package com.jimaginary.machine.graph.viewer;
+package com.jimaginary.machine.graph.selector;
 
 import com.jimaginary.graph.module.reg.GraphFactory;
 import com.jimaginary.machine.api.GraphData;
-import com.jimaginary.machine.api.GraphType;
 import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JOptionPane;
@@ -29,32 +31,43 @@ import org.openide.util.lookup.Lookups;
  *
  * @author simonkenny
  */
-public class GraphTypeNode extends AbstractNode implements PropertyChangeListener {
-    private final GraphType gtp;
+public class SelectionListItemNode extends AbstractNode implements PropertyChangeListener {
+    private final SelectionListItem item;
     
-    public GraphTypeNode(GraphType _gtp) {
-        super (Children.create(new GraphTypeNodeChildFactory(_gtp), true), Lookups.singleton(_gtp));
+    public SelectionListItemNode(SelectionListItem _item) {
+        super (Children.create(new SelectionListItemNodeChildFactory(_item), true), Lookups.singleton(_item));
         //super(new Children.Array());
-        gtp = _gtp;
-        setDisplayName (gtp.getName());
-        gtp.addPropertyChangeListener(WeakListeners.propertyChange(this, gtp));
+        item = _item;
+        setDisplayName(item.getName());
+        //item.addPropertyChangeListener(WeakListeners.propertyChange(this, item));
     }
     
-    public GraphTypeNode() {
-        super (Children.create(new GraphTypeNodeChildFactory(), true));
-        gtp = null;
+    public SelectionListItemNode() {
+        super (Children.create(new SelectionListItemNodeChildFactory(), true));
+        item = null;
         setDisplayName ("Graph Building");
+    }
+    
+    public String getGraphNodeName() {
+        if( item != null ) {
+            return item.getName();
+        }
+        return null;
+    }
+    
+    public String getDescription() {
+        return item.getDescription();
     }
     
     @Override
     public Image getIcon (int type) {
-        if( gtp != null ) {
-            switch(gtp.getType()) {
-                case GraphType.GRAPH:
+        if( item != null ) {
+            switch(item.getType()) {
+                case SelectionListItem.GRAPH:
                     return ImageUtilities.loadImage ("resources/graphicon.png");
-                case GraphType.IN_NODE:
+                case SelectionListItem.IN_NODE:
                     return ImageUtilities.loadImage ("resources/inArrow.png");
-                case GraphType.OUT_NODE:
+                case SelectionListItem.OUT_NODE:
                     return ImageUtilities.loadImage ("resources/outArrow.png");
             }
         }
@@ -68,13 +81,13 @@ public class GraphTypeNode extends AbstractNode implements PropertyChangeListene
     
     @Override
     public Action[] getActions (boolean popup) {
-        if( gtp != null ) {
-            switch(gtp.getType()) {
-                case GraphType.GRAPH:
+        if( item != null ) {
+            switch(item.getType()) {
+                case SelectionListItem.GRAPH:
                     return new Action[] { new NewEmptyGraphAction(), new NewRandomGraphAction() };
-                case GraphType.IN_NODE:
+                case SelectionListItem.IN_NODE:
                     return null;
-                case GraphType.OUT_NODE:
+                case SelectionListItem.OUT_NODE:
                     return null;
             }
         }
@@ -96,7 +109,7 @@ public class GraphTypeNode extends AbstractNode implements PropertyChangeListene
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            GraphType obj = getLookup().lookup(GraphType.class);
+            SelectionListItem obj = getLookup().lookup(SelectionListItem.class);
             GraphData.setGraph(GraphFactory.createGraph(obj.getType()));
             JOptionPane.showMessageDialog(null, "Created new empty " + obj);
         }
@@ -109,7 +122,7 @@ public class GraphTypeNode extends AbstractNode implements PropertyChangeListene
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            GraphType obj = getLookup().lookup(GraphType.class);
+            SelectionListItem obj = getLookup().lookup(SelectionListItem.class);
             GraphData.setGraph(GraphFactory.createGraph(obj.getType()));
             GraphFactory.randomiseGraph(GraphData.getGraph());
             JOptionPane.showMessageDialog(null, "Created new random " + obj);
@@ -121,7 +134,7 @@ public class GraphTypeNode extends AbstractNode implements PropertyChangeListene
 
         Sheet sheet = Sheet.createDefault();
         Sheet.Set set = Sheet.createPropertiesSet();
-        GraphType obj = getLookup().lookup(GraphType.class);
+        SelectionListItem obj = getLookup().lookup(SelectionListItem.class);
 
         try {
 
