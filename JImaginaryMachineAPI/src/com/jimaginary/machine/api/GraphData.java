@@ -19,6 +19,7 @@ public class GraphData {
     public static Graph graph;
     public static List<Observer> observers = new ArrayList<Observer>();
     public static String currentNodeName;
+    public static String lastNodeName;
     
     public static void setGraph(Graph _graph) {
         System.out.println("GraphData:setGraph");
@@ -52,9 +53,12 @@ public class GraphData {
     
     // node creation
     public static void setNodeName(String _name) {
+        lastNodeName = currentNodeName;
         currentNodeName = _name;
     }
     
+    
+    // these are actions called by the selector level, non-working, just placeholders
     public static boolean addNode() {
         if( currentNodeName != null ) {
             // do something
@@ -62,6 +66,25 @@ public class GraphData {
             return true;
         }
         JOptionPane.showMessageDialog(null, "Add Node: [null]");
+        return false;
+    }
+    
+    public static boolean linkNodes() {
+        if( currentNodeName != null && lastNodeName != null ) {
+            JOptionPane.showMessageDialog(null, "Link "+lastNodeName+" to "+currentNodeName);
+            return true;
+        }
+        JOptionPane.showMessageDialog(null, "Can't link nodes" );
+        return false;
+    }
+    
+    public static boolean removeNode() {
+        if( currentNodeName != null ) {
+            // do something
+            JOptionPane.showMessageDialog(null, "Remove Node: "+currentNodeName);
+            return true;
+        }
+        JOptionPane.showMessageDialog(null, "Remove Node: [null]");
         return false;
     }
 }
