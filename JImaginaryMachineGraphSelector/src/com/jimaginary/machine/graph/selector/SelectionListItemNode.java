@@ -12,19 +12,16 @@ import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JOptionPane;
+import org.netbeans.api.visual.action.ConnectProvider;
 import org.openide.ErrorManager;
 import org.openide.nodes.AbstractNode;
 import org.openide.nodes.Children;
 import org.openide.nodes.PropertySupport;
 import org.openide.nodes.Sheet;
 import org.openide.util.ImageUtilities;
-import org.openide.util.WeakListeners;
 import org.openide.util.lookup.Lookups;
 
 /**
@@ -111,6 +108,7 @@ public class SelectionListItemNode extends AbstractNode implements PropertyChang
         public void actionPerformed(ActionEvent e) {
             SelectionListItem obj = getLookup().lookup(SelectionListItem.class);
             GraphData.setGraph(GraphFactory.createGraph(obj.getType()));
+            GraphFactory.finishGraph(GraphData.getGraph());
             JOptionPane.showMessageDialog(null, "Created new empty " + obj);
         }
     }
@@ -155,4 +153,5 @@ public class SelectionListItemNode extends AbstractNode implements PropertyChang
         return sheet;
 
     }
+
 }

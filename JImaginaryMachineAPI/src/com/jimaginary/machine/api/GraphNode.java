@@ -6,6 +6,7 @@
 
 package com.jimaginary.machine.api;
 
+import com.jimaginary.machine.math.MathFunction;
 import java.util.ArrayList;
 
 /**
@@ -26,7 +27,7 @@ public class GraphNode implements Comparable<GraphNode> {
     ArrayList<GraphNode> previous;
     GraphNode []next;
     int maxNextConnections;
-    float []parameters;
+    MathFunction []parameters;
     int numParameters;
     // flags
     boolean acceptsConnection;
@@ -42,13 +43,13 @@ public class GraphNode implements Comparable<GraphNode> {
         maxNextConnections = maxChildren;
         next = new GraphNode[maxNextConnections];
         numParameters = _numParameters;
-        parameters = new float[numParameters];
+        parameters = new MathFunction[numParameters];
         acceptsConnection = true;
         allowsSelfConnection = false;
         valid = true;
     }
 
-    protected boolean isInvalid() {
+    public boolean isInvalid() {
         return !valid;
     }
 
@@ -78,9 +79,10 @@ public class GraphNode implements Comparable<GraphNode> {
         //		setNameAndDescription(null, "description text");
     }
 
-    //override
     public void randomiseParameters() {
-        // do
+        for( MathFunction param : parameters ) {
+            param.evaluate();
+        }
     }
 
     protected boolean nextNodesSet() {
@@ -179,11 +181,22 @@ public class GraphNode implements Comparable<GraphNode> {
         description = _description;
     }
     
-    protected void setParameter(int idx, float val) {
+    protected void setParameter(int idx, MathFunction func) {
         if( idx >= 0 && idx < numParameters ) {
-            parameters[idx] = val;
+            parameters[idx] = func;
         }
-        refreshDescription();
+        if( parametersAreInitialised() ) {
+            refreshDescription();
+        }
+    }
+    
+    protected boolean parametersAreInitialised() {
+        for( MathFunction func : parameters ) {
+            if( func == null ) {
+                return false;
+            }
+        }
+        return true;
     }
     
     protected void setAllowsSelfConnection(boolean state) {
@@ -215,11 +228,11 @@ public class GraphNode implements Comparable<GraphNode> {
         return next.length;
     }
     
-    protected float getParameter(int idx) {
+    public MathFunction getParameter(int idx) {
         if( idx >= 0 && idx < numParameters ) {
             return parameters[idx];
         }
-        return 0.f;
+        return null;
     }
     
     public GraphNode getNext(int idx) {

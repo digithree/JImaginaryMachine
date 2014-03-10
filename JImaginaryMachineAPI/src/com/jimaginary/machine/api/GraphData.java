@@ -51,22 +51,42 @@ public class GraphData {
         return observers.remove(ob);
     }
     
+    public static GraphNode getGraphNodeById(int id) {
+        if( graph != null ) {
+            return graph.getNodeById(id);
+        }
+        return null;
+    }
+    
     // node creation
     public static void setNodeName(String _name) {
-        lastNodeName = currentNodeName;
-        currentNodeName = _name;
+        if( _name.contains("Node") || _name.contains("node") ) {
+            lastNodeName = currentNodeName;
+            currentNodeName = _name;
+        }
+    }
+    
+    public static String getNodeName() {
+        return currentNodeName;
+    }
+    
+    public static String getLastNodeName() {
+        return lastNodeName;
     }
     
     
     // these are actions called by the selector level, non-working, just placeholders
-    public static boolean addNode() {
+    public static int addNode() {
+        /*
         if( currentNodeName != null ) {
-            // do something
-            JOptionPane.showMessageDialog(null, "Add Node: "+currentNodeName);
-            return true;
+            // add the node
+            int id = Graph.addNodeByName(currentNodeName);
+            //JOptionPane.showMessageDialog(null, "Add Node: "+currentNodeName);
+            return id;
         }
-        JOptionPane.showMessageDialog(null, "Add Node: [null]");
-        return false;
+                */
+        JOptionPane.showMessageDialog(null, "[not implemented]Couldn't add node: "+currentNodeName);
+        return -1;
     }
     
     public static boolean linkNodes() {

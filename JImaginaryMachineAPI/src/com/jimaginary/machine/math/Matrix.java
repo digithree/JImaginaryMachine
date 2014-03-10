@@ -4,7 +4,7 @@
  * and open the template in the editor.
  */
 
-package com.jimaginary.machine.api;
+package com.jimaginary.machine.math;
 
 /**
  *

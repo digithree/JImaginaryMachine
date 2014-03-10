@@ -7,6 +7,11 @@
 package com.jimaginary.machine.midi.phrase;
 
 import com.jimaginary.machine.api.*;
+import com.jimaginary.machine.math.Bernoulli;
+import com.jimaginary.machine.math.ConstantFunction;
+import com.jimaginary.machine.math.Poisson;
+import com.jimaginary.machine.math.ProbabilityTable;
+import com.jimaginary.machine.math.Uniform;
 import java.util.Arrays;
 
 /**
@@ -78,12 +83,12 @@ public final class MidiPhraseInputSetCollection extends SetCollection {
     private final float []MODIFY_NODE_SELECTION_PROB = { 0.4f, 0.2f, 0.2f, 0.2f };
     public int key, mode;
     
-    private static String []inNodes = { "MidiNoteSampleNode", 
-                                        "MidiKeyTypeModifyNode",
-                                        "MidiKeyModifyNode",
-                                        "MidiModeModifyNode",
-                                        "MidiRangeModifyNode"  
-                                       };
+    private static String []nodeNameList = { "MidiNoteSampleNode", 
+                                            "MidiKeyTypeModifyNode",
+                                            "MidiKeyModifyNode",
+                                            "MidiModeModifyNode",
+                                            "MidiRangeModifyNode"  
+                                           };
 
     public MidiPhraseInputSetCollection() {
         super();
@@ -118,7 +123,7 @@ public final class MidiPhraseInputSetCollection extends SetCollection {
     }
     
     public static String[] getInNodesNames() {
-        return inNodes;
+        return nodeNameList;
     }
     
     public static String[] getOutNodesNames() {
@@ -243,6 +248,22 @@ public final class MidiPhraseInputSetCollection extends SetCollection {
         return retNodes;
     }
     
+    @Override
+    public GraphNode getGraphNodeByName(String nodeName) {
+        if( nodeName.equals(nodeNameList[0]) ) {
+            return (GraphNode)new MidiNoteSampleNode();
+        } else if( nodeName.equals(nodeNameList[1]) ) {
+            return (GraphNode)new MidiKeyModifyNode();
+        } else if( nodeName.equals(nodeNameList[2]) ) {
+            return (GraphNode)new MidiKeyTypeModifyNode();
+        } else if( nodeName.equals(nodeNameList[3]) ) {
+            return (GraphNode)new MidiModeModifyNode();
+        } else if( nodeName.equals(nodeNameList[4]) ) {
+            return (GraphNode)new MidiRangeModifyNode();
+        } 
+        return null;
+    }
+    
     // ----***--- NODES ---***----
 
     // -- Sample GraphNode
@@ -254,25 +275,23 @@ public final class MidiPhraseInputSetCollection extends SetCollection {
      *              size - size of sample
      */
     public class MidiNoteSampleNode extends GraphNode {
-        final String []PARAM_JUMP_LIST = { "Random", "Next", "Previous", "+2","+3", "-2","-3" };
-        private final float []PARAM_JUMP_PROBS = { 0.1f, 0.3f, 0.2f, 0.12f, 0.08f, 0.12f, 0.08f };
+        final String []PARAM_JUMP_LIST = { "Random", "Previous", "Next", "+2","+3", "-2","-3" };
+        //private final float []PARAM_JUMP_PROBS = { 0.1f, 0.3f, 0.2f, 0.12f, 0.08f, 0.12f, 0.08f };
+        final float PARAM_JUMP_MEAN = 2.5f;
+        
         private final int PARAM_JUMP = 0;
         private final int PARAM_SIZE = 1;
 
         MidiNoteSampleNode() {
             super("Midi Note Sample",SAMPLE,2,1);
+            setParameter(PARAM_JUMP, new Poisson(PARAM_JUMP_MEAN,PARAM_JUMP_LIST.length-1) );
+            setParameter(PARAM_SIZE, new ConstantFunction(1.f) );
         }
 
         @Override
         public void refreshDescription() {
-            setDescription( "jump [" + PARAM_JUMP_LIST[(int)getParameter(PARAM_JUMP)]
-                + "], size [" + (int)getParameter(PARAM_SIZE) + "]");
-        }
-
-        @Override
-        public void randomiseParameters() {
-            setParameter(PARAM_JUMP, Utils.getIdxFromProbTable(PARAM_JUMP_PROBS) );
-            setParameter(PARAM_SIZE, 1 );  // TODO : replace this with Poisson r.v. generator using poissonMean
+            setDescription( "jump [" + PARAM_JUMP_LIST[(int)getParameter(PARAM_JUMP).lastValue()]
+                + "], size [" + getParameter(PARAM_SIZE).lastValue() + "]");
         }
 
         @Override
@@ -280,23 +299,23 @@ public final class MidiPhraseInputSetCollection extends SetCollection {
             // calculate offset
             boolean rnd = false;
             int offset = 0;
-            if( getParameter(PARAM_JUMP) == 0 ) {            // random
+            if( getParameter(PARAM_JUMP).lastValue() == 0 ) {            // random
                 rnd = true;
             } else {
                 // if not random, then get offset from last position
-                if( getParameter(PARAM_JUMP) == 1 ) {     // next
-                    offset = 1;
-                } else if( getParameter(PARAM_JUMP) == 2 ) {     // previous
+                if( getParameter(PARAM_JUMP).lastValue() == 1 ) {     // previous
                     offset = -1;
-                } else if( getParameter(PARAM_JUMP) >= 3 && getParameter(PARAM_JUMP) <= 4) {     // +2, +3
-                    offset = (int)getParameter(PARAM_JUMP) - 1;
-                } else if( getParameter(PARAM_JUMP) >= 5 && getParameter(PARAM_JUMP) <= 6) {     // -2, -3
-                    offset = -1 * ((int)getParameter(PARAM_JUMP) - 3);
+                } else if( getParameter(PARAM_JUMP).lastValue() == 2 ) {     // next
+                    offset = 1;
+                } else if( getParameter(PARAM_JUMP).lastValue() >= 3 && getParameter(PARAM_JUMP).lastValue() <= 4) {     // +2, +3
+                    offset = (int)getParameter(PARAM_JUMP).lastValue() - 1;
+                } else if( getParameter(PARAM_JUMP).lastValue() >= 5 && getParameter(PARAM_JUMP).lastValue() <= 6) {     // -2, -3
+                    offset = -1 * ((int)getParameter(PARAM_JUMP).lastValue() - 3);
                 }
             }
             // move read head (have no effect if random chosen)
             System.out.println( name+"\t\t- processing: offset = "+offset);
-            graphPacket.tempSet = graphPacket.inputSetCollection.sampleSubSet(rnd,offset,(int)getParameter(PARAM_SIZE));
+            graphPacket.tempSet = graphPacket.inputSetCollection.sampleSubSet(rnd,offset,(int)getParameter(PARAM_SIZE).lastValue());
 
             graphPacket.displayVariables();
 
@@ -306,92 +325,80 @@ public final class MidiPhraseInputSetCollection extends SetCollection {
 
     // --- Modify Nodes
     public class MidiKeyTypeModifyNode extends GraphNode {
-            private final int PARAM_KEY_TYPE = 0;
-            private final float[] PARAM_KEY_TYPE_PROBS = { 0.05f, 0.5f, 0.25f, 0.2f };
-            private final String[] PARAM_KEY_TYPE_NAME = { "All", "Key:Any", "Key:Strong", "Key:Weak" };
+        private final int PARAM_KEY_TYPE = 0;
+        //private final float[] PARAM_KEY_TYPE_PROBS = { 0.05f, 0.5f, 0.25f, 0.2f };
+        private final String[] PARAM_KEY_TYPE_NAME = { "All", "Key:Any", "Key:Strong", "Key:Weak" };
+        private final float mean = 1.65f;
 
         MidiKeyTypeModifyNode() {
             super("Midi Key Type",MODIFY,1,1);
+            setParameter(PARAM_KEY_TYPE, new Poisson(mean,PARAM_KEY_TYPE_NAME.length-1) );
         }
 
             @Override
         public void refreshDescription() {
-            setDescription( "["+PARAM_KEY_TYPE_NAME[(int)getParameter(PARAM_KEY_TYPE)]+"]");
-        }
-
-            @Override
-        public void randomiseParameters() {
-            setParameter(PARAM_KEY_TYPE, Utils.getIdxFromProbTable(PARAM_KEY_TYPE_PROBS) );
+            setDescription( "["+PARAM_KEY_TYPE_NAME[(int)getParameter(PARAM_KEY_TYPE).lastValue()]+"]");
         }
 
             @Override
         public GraphNode process( Graph.GraphPacket graphPacket ) {
-                    if( graphPacket.inputSetCollection instanceof MidiPhraseInputSetCollection ) {
-                            ((MidiPhraseInputSetCollection)graphPacket.inputSetCollection).chooseSet((int)getParameter(PARAM_KEY_TYPE));
-                    }
-
-                    System.out.println(name+"\t\t - set key type to "+PARAM_KEY_TYPE_NAME[(int)getParameter(PARAM_KEY_TYPE)]);
-
+            if( graphPacket.inputSetCollection instanceof MidiPhraseInputSetCollection ) {
+                ((MidiPhraseInputSetCollection)graphPacket.inputSetCollection).chooseSet((int)getParameter(PARAM_KEY_TYPE).lastValue());
+            }
+            System.out.println(name+"\t\t - set key type to "+PARAM_KEY_TYPE_NAME[(int)getParameter(PARAM_KEY_TYPE).lastValue()]);
             return getNext(0);
         }
     }
 
     public class MidiKeyModifyNode extends GraphNode {
-            private final int PARAM_KEY = 0;
-            private final float[] PARAM_KEY_PROBS;
+        private final int PARAM_KEY = 0;    
 
         MidiKeyModifyNode() {
             super("Midi Key",MODIFY,1,1);
-            PARAM_KEY_PROBS = Utils.createUniformProbTable(NUM_KEYS);
+            setParameter(PARAM_KEY, new Uniform(NUM_KEYS));
         }
 
         @Override
         public void refreshDescription() {
-            setDescription("key: ["+KEY_NAMES[(int)getParameter(PARAM_KEY)]+"]");
-        }
-
-        @Override
-        public void randomiseParameters() {
-            setParameter(PARAM_KEY, Utils.getIdxFromProbTable(PARAM_KEY_PROBS) );
+            setDescription("key: ["+KEY_NAMES[(int)getParameter(PARAM_KEY).lastValue()]+"]");
         }
 
         @Override
         public GraphNode process( Graph.GraphPacket graphPacket ) {
-                    if( graphPacket.inputSetCollection instanceof MidiPhraseInputSetCollection ) {
-                            ((MidiPhraseInputSetCollection)graphPacket.inputSetCollection).createKeyAndModeSet((int)getParameter(PARAM_KEY),-1);
-                    }
+            if( graphPacket.inputSetCollection instanceof MidiPhraseInputSetCollection ) {
+                ((MidiPhraseInputSetCollection)graphPacket.inputSetCollection).createKeyAndModeSet((int)getParameter(PARAM_KEY).lastValue(),-1);
+            }
 
-                    System.out.println(name+"\t\t\t - set key to "+KEY_NAMES[(int)getParameter(PARAM_KEY)]);
+            System.out.println(name+"\t\t\t - set key to "+KEY_NAMES[(int)getParameter(PARAM_KEY).lastValue()]);
 
             return getNext(0);
         }
     }
 
     public class MidiModeModifyNode extends GraphNode {
-            private final int PARAM_MODE = 0;
-            private final float[] PARAM_MODE_PROBS = { 0.2f, 0.2f, 0.14f, 0.1f, 0.1f, 0.2f, 0.06f };
+        private final int PARAM_MODE = 0;
+        private final float[] PARAM_MODE_PROBS = { 0.2f, 0.2f, 0.14f, 0.1f, 0.1f, 0.2f, 0.06f };
+            
 
         MidiModeModifyNode() {
             super("Midi Mode",MODIFY,1,1);
+            setParameter(PARAM_MODE, new ProbabilityTable(PARAM_MODE_PROBS.length));
+            getParameter(PARAM_MODE).setParameters(0,PARAM_MODE_PROBS);
+            getParameter(PARAM_MODE).setParamNames(0,MODE_NAMES);
         }
 
             @Override
         public void refreshDescription() {
-            setDescription("["+MODE_NAMES[(int)getParameter(PARAM_MODE)]+"]");
-        }
-
-        @Override
-        public void randomiseParameters() {
-            setParameter(PARAM_MODE, Utils.getIdxFromProbTable(PARAM_MODE_PROBS) );
+            setDescription("["+MODE_NAMES[(int)getParameter(PARAM_MODE).lastValue()]+"]");
         }
 
         @Override
         public GraphNode process( Graph.GraphPacket graphPacket ) {
-                    if( graphPacket.inputSetCollection instanceof MidiPhraseInputSetCollection ) {
-                            ((MidiPhraseInputSetCollection)graphPacket.inputSetCollection).createKeyAndModeSet(-1,(int)getParameter(PARAM_MODE));
-                    }
+            if( graphPacket.inputSetCollection instanceof MidiPhraseInputSetCollection ) {
+                ((MidiPhraseInputSetCollection)graphPacket.inputSetCollection).createKeyAndModeSet(-1,(int)getParameter(PARAM_MODE).lastValue());
+            }
 
-                    System.out.println(name+"\t\t\t - set mode to "+MODE_NAMES[(int)getParameter(PARAM_MODE)]);
+            System.out.println(name+"\t\t\t - set mode to "+MODE_NAMES[(int)getParameter(PARAM_MODE).lastValue()]);
 
             return getNext(0);
         }
@@ -399,38 +406,39 @@ public final class MidiPhraseInputSetCollection extends SetCollection {
 
     public class MidiRangeModifyNode extends GraphNode {
         private final int PARAM_OCTAVE = 0;
-        private final int PARAM_SIZE = 1;
-                                                                                        //   all    -1      0      1     2      3     4       5      6      7
-        private final float[] PARAM_OCTAVE_PROBS = { 0.02f, 0.00f, 0.01f, 0.03f, 0.08f, 0.16f, 0.31f, 0.26f, 0.12f, 0.01f };
-        private final String[] PARAM_OCTAVE_NAME = { "All", "Oct -1", "Oct 0", "Oct 1", "Oct 2", "Oct 3", "Oct 4", "Oct 5", "Oct 6", "Oct 7" };
+        private final int PARAM_OCTAVE_RND = 1;
+        private final int PARAM_SIZE = 2;
+        
+        private final float PARAM_OCTAVE_PROB_MEAN = 5; // note: corresponds to octave 3 as mean
+        private final String[] PARAM_OCTAVE_NAME = { "Oct -1", "Oct 0", "Oct 1", "Oct 2", "Oct 3", "Oct 4", "Oct 5", "Oct 6", "Oct 7" };
+        
+        private final float PARAM_OCTAVE_PROB_RND = 0.2f;
 
-        private final float[] PARAM_SIZE_PROBS = { 0.6f, 0.3f, 0.1f };
+        private final float PARAM_SIZE_PROB_MEAN = 0.5f;
+        private final int PARAM_SIZE_MAX = 2;  //actually 3, including 0 because 0 is invalid size
 
         MidiRangeModifyNode() {
-            super("Midi Range",MODIFY,2,1);
+            super("Midi Range",MODIFY,3,1);
+            setParameter(PARAM_OCTAVE, new Poisson(PARAM_OCTAVE_PROB_MEAN,PARAM_OCTAVE_NAME.length-1));
+            setParameter(PARAM_OCTAVE_RND, new Bernoulli(PARAM_OCTAVE_PROB_RND));
+            setParameter(PARAM_SIZE, new Poisson(PARAM_SIZE_PROB_MEAN,PARAM_SIZE_MAX));
         }
 
         @Override
         public void refreshDescription() {
-            setDescription("range: ["+PARAM_OCTAVE_NAME[(int)getParameter(PARAM_OCTAVE)]+"]"
-                        +" size: ["+((int)getParameter(PARAM_SIZE)+1)+"]");
-        }
-
-        @Override
-        public void randomiseParameters() {
-            setParameter(PARAM_OCTAVE, Utils.getIdxFromProbTable(PARAM_OCTAVE_PROBS) );
-            setParameter(PARAM_SIZE, Utils.getIdxFromProbTable(PARAM_SIZE_PROBS) );
+            setDescription("range: ["+PARAM_OCTAVE_NAME[(int)getParameter(PARAM_OCTAVE).lastValue()]+"]"
+                        +" size: ["+((int)getParameter(PARAM_SIZE).lastValue()+1)+"]");
         }
 
         @Override
         public GraphNode process( Graph.GraphPacket graphPacket ) {
-                    if( graphPacket.inputSetCollection instanceof MidiPhraseInputSetCollection ) {
-                            graphPacket.inputSetCollection.setRange((int)getParameter(PARAM_OCTAVE)==0.f,
-                                    getParameter(PARAM_OCTAVE)-1,getParameter(PARAM_SIZE)+1);
-                    }
+            if( graphPacket.inputSetCollection instanceof MidiPhraseInputSetCollection ) {
+                graphPacket.inputSetCollection.setRange((int)getParameter(PARAM_OCTAVE).lastValue()==0.f,
+                        getParameter(PARAM_OCTAVE).lastValue()-1,getParameter(PARAM_SIZE).lastValue()+1);
+            }
 
-                    System.out.println(name+"\t\t - set range to "+PARAM_OCTAVE_NAME[(int)getParameter(PARAM_OCTAVE)]
-                                                    +", size "+getParameter(PARAM_SIZE));
+            System.out.println(name+"\t\t - set range to "+PARAM_OCTAVE_NAME[(int)getParameter(PARAM_OCTAVE).lastValue()]
+                        +", size "+getParameter(PARAM_SIZE).lastValue());
 
             return getNext(0);
         }

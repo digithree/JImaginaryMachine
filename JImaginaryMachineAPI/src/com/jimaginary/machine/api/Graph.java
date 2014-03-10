@@ -6,6 +6,8 @@
 
 package com.jimaginary.machine.api;
 
+import com.jimaginary.machine.math.Bernoulli;
+import com.jimaginary.machine.math.Matrix;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Observable;
@@ -59,6 +61,7 @@ public class Graph extends Observable {
         graphPacket = new GraphPacket(inputSetCollection,outputSetCollection);
         lastGraphPacket = null; // why use this?
         setupManditoryNodes();
+        setChanged();
     }
     
     public SetCollection getInputSetCollection() {
@@ -121,6 +124,20 @@ public class Graph extends Observable {
         setChanged();
     }
     
+    public int addNodeByName( String nodeName ) {
+        GraphNode node = inputSetCollection.getGraphNodeByName(nodeName);
+        if( node == null ) {
+            node = outputSetCollection.getGraphNodeByName(nodeName);
+        }
+        if( node == null ) {
+            return -1;
+        }
+        // else, we got a node
+        allNodes.add(node);
+        setChanged();
+        return node.getId();
+    }
+    
     public void finishChanges() {
         notifyObservers();
     }
@@ -149,10 +166,11 @@ public class Graph extends Observable {
     }
     
     public Matrix getAdjacencyMatrix() {
-        if( adjacencyMatrix == null ) {
+        // reshuffle and rebuild every time
+        //if( adjacencyMatrix == null ) {
             reshuffle();
             buildAdjacencyMatrix();
-        }
+        //}
         return adjacencyMatrix;
     }
 
@@ -352,44 +370,30 @@ public class Graph extends Observable {
     // PUT NOTE
     public class Choice2Node extends GraphNode {
         final float NODE_CHOICE_MIN_VAL = 0.15f;
+        
+        private final int PARAM_CHOICE = 0;
+        private final float CHOICE_PROB = 0.5f;
 
         Choice2Node() {
-            super("2 Choice",CHOICE,2,2);
+            super("2 Choice",CHOICE,1,2);
             //default values for choices, uniform
-            parameters[0] = 0.5f;
-            parameters[1] = 0.5f;
+            setParameter(PARAM_CHOICE, new Bernoulli(CHOICE_PROB)); 
+            getParameter(PARAM_CHOICE).setAlwaysRandomise(true);
         }
 
         @Override
         public void refreshDescription() {
-            description = "Choose A P["+String.format("%.2f",parameters[0])+"] or B P["
-                +String.format("%.2f",parameters[1])+"]";
-        }
-
-        @Override
-        public void randomiseParameters() {
-            // setting to default random generator, could use inverse function method to use different distribution
-            float rnd = (float)Math.random();
-            while( rnd < NODE_CHOICE_MIN_VAL || (1.f - rnd) < NODE_CHOICE_MIN_VAL ) {
-                rnd = (float)Math.random();
-            }
-            parameters[0] = rnd;
-            parameters[1] = 1.f - rnd;
-            refreshDescription();
+            description = "Choose A P["+String.format("%.2f",parameters[0].getParameter(0))+"] or B P["
+                +String.format("%.2f",(1.f-parameters[0].getParameter(0)))+"]";
         }
 
         // override
         @Override
         public GraphNode process( GraphPacket graphPacket ) {
-            float rnd = (float)Math.random();
-
-            if( rnd < parameters[0] ) {
-                System.out.println( name+" \t\t- choose A");
-                return next[0];
-            }
-            // else
-            System.out.println( name+" \t\t- choose B");
-            return next[1];
+            int choice = (int)getParameter(PARAM_CHOICE).evaluate();
+            
+            System.out.println(name+" \t\t- choose "+(choice==0?"A":"B"));
+            return next[choice];
         }
     }
 

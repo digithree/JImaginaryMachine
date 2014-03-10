@@ -58,6 +58,7 @@
             </module-dependencies>
             <public-packages>
                 <package>com.jimaginary.machine.api</package>
+                <package>com.jimaginary.machine.math</package>
             </public-packages>
         </data>
     </configuration>

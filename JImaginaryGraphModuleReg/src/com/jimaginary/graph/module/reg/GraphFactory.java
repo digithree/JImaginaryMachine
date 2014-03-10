@@ -42,6 +42,12 @@ public class GraphFactory {
         return graph;
     }
     
+    public static void finishGraph(Graph graph) {
+        if( graph != null ) {
+            graph.finishChanges();
+        }
+    }
+    
     public static String getGraphDescription(int type) {
         switch(type) {
             case GRAPH_MIDI_PHRASE_BUILDER:

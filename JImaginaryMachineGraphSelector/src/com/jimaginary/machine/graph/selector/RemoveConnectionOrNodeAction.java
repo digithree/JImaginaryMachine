@@ -8,7 +8,6 @@ package com.jimaginary.machine.graph.selector;
 import com.jimaginary.machine.api.GraphData;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import javax.swing.JOptionPane;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.awt.ActionReferences;
@@ -16,22 +15,22 @@ import org.openide.awt.ActionRegistration;
 import org.openide.util.NbBundle.Messages;
 
 @ActionID(
-        category = "Tools",
-        id = "com.jimaginary.machine.graph.selector.LinkNodes"
+        category = "Edit",
+        id = "com.jimaginary.machine.graph.selector.RemoveConnectionOrNode"
 )
 @ActionRegistration(
-        iconBase = "com/jimaginary/machine/graph/selector/Link-16.png",
-        displayName = "#CTL_LinkNodes"
+        iconBase = "com/jimaginary/machine/graph/selector/Close-16.png",
+        displayName = "#CTL_RemoveConnectionOrNode"
 )
 @ActionReferences({
-    @ActionReference(path = "Menu/Edit", position = 100),
-    @ActionReference(path = "Toolbars/Edit", position = 200)
+    @ActionReference(path = "Menu/Edit", position = 200, separatorAfter = 250),
+    @ActionReference(path = "Toolbars/Edit", position = 400)
 })
-@Messages("CTL_LinkNodes=Link Nodes")
-public final class LinkNodes implements ActionListener {
+@Messages("CTL_RemoveConnectionOrNode=Remove")
+public final class RemoveConnectionOrNodeAction implements ActionListener {
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        GraphData.linkNodes();
+        GraphData.removeNode();
     }
 }

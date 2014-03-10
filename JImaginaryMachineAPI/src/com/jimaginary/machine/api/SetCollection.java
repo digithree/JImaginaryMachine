@@ -262,4 +262,8 @@ public class SetCollection {
     public GraphNode[] generateAllNodes() {
         return null;
     }
+    
+    public GraphNode getGraphNodeByName(String nodeName) {
+        return null;
+    }
 }
