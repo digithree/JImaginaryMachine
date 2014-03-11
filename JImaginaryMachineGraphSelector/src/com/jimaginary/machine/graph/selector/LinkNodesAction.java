@@ -9,11 +9,14 @@ import com.jimaginary.machine.api.GraphData;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import javax.swing.JOptionPane;
+import org.netbeans.api.visual.vmd.VMDPinWidget;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.awt.ActionReferences;
 import org.openide.awt.ActionRegistration;
+import org.openide.nodes.Node;
 import org.openide.util.NbBundle.Messages;
+import org.openide.windows.TopComponent;
 
 @ActionID(
         category = "Tools",
@@ -33,5 +36,12 @@ public final class LinkNodesAction implements ActionListener {
     @Override
     public void actionPerformed(ActionEvent e) {
         GraphData.linkNodes();
+        /*
+        Node []nodes = TopComponent.getRegistry().getActivated();
+        for( Node node : nodes ) {
+            Widget w = getWidget(node);
+            if( !(node instanceof VMDPinWidget) )
+        }
+                */
     }
 }

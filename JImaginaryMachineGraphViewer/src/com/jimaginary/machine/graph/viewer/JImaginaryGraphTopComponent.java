@@ -11,6 +11,8 @@ import com.jimaginary.machine.math.Matrix;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.beans.PropertyVetoException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
@@ -25,14 +27,17 @@ import org.netbeans.api.visual.action.ConnectProvider;
 import org.netbeans.api.visual.action.ConnectorState;
 import org.netbeans.api.visual.action.PopupMenuProvider;
 import org.netbeans.api.visual.action.SelectProvider;
+import org.netbeans.api.visual.action.WidgetAction;
 import org.netbeans.api.visual.anchor.AnchorFactory;
 import org.netbeans.api.visual.anchor.AnchorShape;
 import org.netbeans.api.visual.graph.GraphScene;
 import org.netbeans.api.visual.model.ObjectState;
+import org.netbeans.api.visual.vmd.VMDConnectionWidget;
 import org.netbeans.api.visual.vmd.VMDGraphScene;
 import org.netbeans.api.visual.vmd.VMDNodeWidget;
 import org.netbeans.api.visual.vmd.VMDPinWidget;
 import org.netbeans.api.visual.widget.ConnectionWidget;
+import org.netbeans.api.visual.widget.EventProcessingType;
 import org.netbeans.api.visual.widget.LayerWidget;
 import org.netbeans.api.visual.widget.Scene;
 import org.netbeans.api.visual.widget.Widget;
@@ -41,11 +46,15 @@ import org.openide.DialogDisplayer;
 import org.openide.NotifyDescriptor;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
+import org.openide.explorer.ExplorerManager;
+import org.openide.explorer.ExplorerUtils;
 import org.openide.nodes.AbstractNode;
 import org.openide.nodes.Children;
+import org.openide.nodes.Node;
 import org.openide.nodes.NodeOperation;
 import org.openide.nodes.PropertySupport;
 import org.openide.nodes.Sheet;
+import org.openide.util.Exceptions;
 import org.openide.util.LookupEvent;
 import org.openide.util.LookupListener;
 import org.openide.windows.TopComponent;
@@ -76,8 +85,9 @@ import org.openide.util.NbBundle.Messages;
     "HINT_JImaginaryGraphTopComponent=This is a JImaginaryGraph window"
 })
 public final class JImaginaryGraphTopComponent extends TopComponent 
-            implements LookupListener {
-    
+            implements LookupListener, ExplorerManager.Provider {
+
+    private final transient ExplorerManager explorerManager = new ExplorerManager();
     
     private final boolean COLLAPSE_NODES_BY_DEFAULT = true;
     
@@ -87,13 +97,15 @@ public final class JImaginaryGraphTopComponent extends TopComponent
     private VMDGraphScene scene;
     //private LayerWidget layer;
     private LayerWidget connectionLayer;
-    private List<GraphNodeItem> graphNodeItems;
+    private final List<GraphNodeItem> graphNodeItems;
 
     public JImaginaryGraphTopComponent() {
         initComponents();
         setName(Bundle.CTL_JImaginaryGraphTopComponent());
         setToolTipText(Bundle.HINT_JImaginaryGraphTopComponent());
         putClientProperty(TopComponent.PROP_CLOSING_DISABLED, Boolean.TRUE);
+        
+        associateLookup(ExplorerUtils.createLookup(explorerManager, getActionMap()));
         
         graphNodeItems = new ArrayList<GraphNodeItem>();
         
@@ -109,14 +121,14 @@ public final class JImaginaryGraphTopComponent extends TopComponent
     }
     
     private GraphNodeItem createWidgetAndNode(String str, Point loc) {
-        GraphNodeItem item = new GraphNodeItem(str);
-        graphNodeItems.add(item);
         VMDNodeWidget node = (VMDNodeWidget)scene.addNode(str);
         node.setNodeName(str);
         if( loc != null ) {
             node.setPreferredLocation(loc);
         }
         createPinsForWidget(str);
+        GraphNodeItem item = new GraphNodeItem(str);
+        graphNodeItems.add(item);
         addWidgetAction(node,item);
         System.out.println("Added node: "+str);
         return item;
@@ -128,6 +140,7 @@ public final class JImaginaryGraphTopComponent extends TopComponent
         createScene();
         connectionLayer = new LayerWidget(scene);
         scene.addChild(connectionLayer);        
+        scene.setKeyEventProcessingType(EventProcessingType.FOCUSED_WIDGET_AND_ITS_CHILDREN);
         graphNodeItems.clear();
     }
     
@@ -136,15 +149,66 @@ public final class JImaginaryGraphTopComponent extends TopComponent
         int id = Integer.parseInt(parts[1]);
         System.out.println("createPinsForWidget: "+str+", id: "+id);
         VMDPinWidget widget = (VMDPinWidget)scene.addPin(str,id+"-pinIn");
-        widget.setPinName("In");
+        //widget.setPinName("In");
+        widget.setPinName(id+"-pinIn");
         widget = (VMDPinWidget)scene.addPin(str,id+"-pinOut");
         widget.setPinName("Out");
+        widget.setPinName(id+"-pinOut");
+        widget.getActions().addAction(ActionFactory.createExtendedConnectAction(connectionLayer, new PinConnectProvider()));
+    }
+    
+    private boolean addEdge(String pinFrom, String pinTo) {
+        if( !pinFrom.contains("pinOut") || !pinTo.contains("pinIn") ) {
+            return false;
+        }
+        String edge = "edge-" + edgeCount++;
+        System.out.println("Trying to add edge ("+edge+") from "+pinFrom+" to "+pinTo);
+        scene.addEdge(edge);
+        scene.setEdgeSource(edge,pinFrom);
+        scene.setEdgeTarget(edge,pinTo);
+        return true;
     }
     
     private void addWidgetAction(VMDNodeWidget widget, final GraphNodeItem item) {
         //widget.getActions().addAction(ActionFactory.createExtendedConnectAction(connectionLayer, new MyConnectProvider()));
         //widget.getActions().addAction(ActionFactory.createConnectAction(connectionLayer, new MyConnectProvider()));
         widget.getActions().addAction(ActionFactory.createMoveAction());
+        widget.getActions().addAction(ActionFactory.createSelectAction(new SelectProvider() {
+            @Override
+            public boolean isAimingAllowed(Widget widget, Point point, boolean bln) {
+                return true;
+            }
+
+            @Override
+            public boolean isSelectionAllowed(Widget widget, Point point, boolean bln) {
+                return true;
+            }
+
+            @Override
+            public void select(Widget widget, Point point, boolean bln) {
+                AbstractNode node = new AbstractNode(Children.LEAF) {
+                    @Override
+                    protected Sheet createSheet() {
+                        Sheet sheet = super.createSheet();
+                        Sheet.Set set = Sheet.createPropertiesSet();
+                        set.put(new ParameterProperty(item));
+                        sheet.put(set);
+                        return sheet;
+                    }
+                };
+                node.setDisplayName(item.getDisplayName());
+                node.setShortDescription("Description of " + item.getDisplayName());
+                explorerManager.setRootContext(node);
+                try {
+                    explorerManager.setSelectedNodes(new Node[]{node});
+                } catch (PropertyVetoException ex) {
+                    Exceptions.printStackTrace(ex);
+                }
+            }
+
+        }));
+        widget.getActions().addAction(new KeyboardDeleteActionWidget());
+        /*
         widget.getActions().addAction(ActionFactory.createPopupMenuAction(new PopupMenuProvider() {
             @Override
             public JPopupMenu getPopupMenu(final Widget widget, Point localLocation) {
@@ -172,6 +236,7 @@ public final class JImaginaryGraphTopComponent extends TopComponent
                 return popup;
             }
         }));
+        */
     }
     
     private void createScene() {
@@ -284,6 +349,11 @@ public final class JImaginaryGraphTopComponent extends TopComponent
     public void componentClosed() {
         // TODO add custom code on component closing
     }
+    
+    @Override
+    public void componentActivated() {
+        scene.getView().requestFocusInWindow();
+    }
 
     void writeProperties(java.util.Properties p) {
         // better to version settings since initial version as advocated at
@@ -306,66 +376,44 @@ public final class JImaginaryGraphTopComponent extends TopComponent
     private int edgeCount = 0;
     
     public void updateScene(Graph graph) {
-        //scene = new VMDGraphScene();
-        
-        //JImaginaryGraphPinScene graphScene = new JImaginaryGraphPinScene();
-        //jScrollPane.setViewportView(graphScene.createView());
-        
         System.out.println("updateScene called");
         
-        // get current widgets, delete GraphNodeWidgets
+        // get rid of all widgets
         clearScene();
         // create graph
         Matrix adjMatrix = graph.getAdjacencyMatrix();
         // add nodes
         for( int i = 0 ; i < adjMatrix.getSizeY() ; i++ ) {
-            /*
-            GraphNodeWidget widget = new GraphNodeWidget(
-                scene,
-                //new Point(),
-                new Point(50,40*(i+1)),    // put all on top of each other, layout will fix
-                new GraphNodeItem(graph.getNodeById(i).getName()+"-"+i)
-            );
-            */
             System.out.println("Adding node "+i);
             createWidgetAndNode(graph.getNodeById(i).getName()+"-"+i, null);
-            //layer.addChild(widget);
-            /*
-            VMDNodeWidget widget = (VMDNodeWidget)scene.addNode(""+i);
-            widget.setNodeName(graph.getNodeById(i).getName()+":"+i);
-            if( COLLAPSE_NODES_BY_DEFAULT ) {
-                widget.collapseWidget();
-            }
-            if( i == 0 ) {
-                currentNodeName = widget.getNodeName();
-            }
-         */
-            
+            // note: automatically adds pins
         }
-        // add pins
-        /*
-        for( int i = 0 ; i < adjMatrix.getSizeY() ; i++ ) {
-            String nodeName = graph.getNodeById(i).getName()+"-"+i;
-            System.out.println("Adding pins to node: "+nodeName);
-            createPinsForWidget(nodeName);
-        }
-        */
         // add edges
         for( int i = 0 ; i < adjMatrix.getSizeY() ; i++ ) {
             for( int j = 0 ; j < adjMatrix.getSizeX() ; j++ ) {
                 if( adjMatrix.get(i,j) == 1 ) {
-                    String edge = "edge-" + edgeCount++;
-                    scene.addEdge(edge);
-                    scene.setEdgeSource(edge,i+"-pinOut");
-                    scene.setEdgeTarget(edge,j+"-pinIn");
+                    addEdge(i+"-pinOut",j+"-pinIn");
                 }
             }
         }
-        //scene.validate();
-        // layout scene?
+        // layout scene (uses force-directed layout)
         scene.layoutScene();
+        // add key action to edges
+        System.out.println("trying to add KeyboardDeleteActionWidget action to VMDConnectionWidgets...");
+        for( Widget widget : scene.getChildren() ) {
+            if( widget instanceof VMDConnectionWidget ) {
+                widget.getActions().addAction(new KeyboardDeleteActionWidget());
+                System.out.println("added KeyboardDeleteActionWidget to connection widget");
+            }
+        }
+    }
+
+    @Override
+    public ExplorerManager getExplorerManager() {
+        return explorerManager;
     }
     
+    /*
     class WidgetMenuItem extends JMenuItem {
         public WidgetMenuItem(final Scene scene, final String type, final Point loc) {
             super(type);
@@ -387,6 +435,7 @@ public final class JImaginaryGraphTopComponent extends TopComponent
         }
 
     }
+    */
 
     
     public class GraphObserver implements Observer {
@@ -427,7 +476,8 @@ public final class JImaginaryGraphTopComponent extends TopComponent
                             };
                             node.setDisplayName(item.getParameter());
                             node.setShortDescription("Description of " + item.getParameter());
-                            NodeOperation.getDefault().showProperties(node);
+                            explorerManager.setRootContext(node);
+                            //NodeOperation.getDefault().showProperties(node);
                         }
                     });
                     popup.add(propsMenu);
@@ -462,8 +512,10 @@ public final class JImaginaryGraphTopComponent extends TopComponent
         private final String graphNodeName;
         // properties
         private String []parameters;
+        //private VMDNodeWidget widget;
         
-        public GraphNodeItem(String displayName) {
+        public GraphNodeItem(String displayName) { //, VMDNodeWidget widget
+            //this.widget = widget;
             parameters = new String[MAX_PARAMETERS];
             String []parts = displayName.split("[-]");
             if( parts.length >= 2 ) {
@@ -489,6 +541,12 @@ public final class JImaginaryGraphTopComponent extends TopComponent
             return id;
         }
         
+        /*
+        public VMDNodeWidget getWidget() {
+            return widget;
+        }
+        */
+        
         public String getDisplayName() {
             return graphNodeName+"-"+id;
         }
@@ -505,17 +563,17 @@ public final class JImaginaryGraphTopComponent extends TopComponent
     }
   
     
-    private class MyConnectProvider implements ConnectProvider {
+    private class PinConnectProvider implements ConnectProvider {
         @Override
         public boolean isSourceWidget(Widget source) {
-            JOptionPane.showMessageDialog(null, "Connecting widgets!");
-            return source instanceof VMDNodeWidget && source != null;
+            System.out.println("PinConnectProvider isSourceWidget() called");
+            return source instanceof VMDPinWidget && source != null;
         }
 
         @Override
         public ConnectorState isTargetWidget(Widget src, Widget trg) {
-            JOptionPane.showMessageDialog(null, "Connecting widgets!");
-            return src != trg && trg instanceof VMDNodeWidget ? ConnectorState.ACCEPT : ConnectorState.REJECT;
+            System.out.println("PinConnectProvider isSourceWidget() called");
+            return src != trg && trg instanceof VMDPinWidget ? ConnectorState.ACCEPT : ConnectorState.REJECT;
         }
 
         @Override
@@ -530,13 +588,35 @@ public final class JImaginaryGraphTopComponent extends TopComponent
 
         @Override
         public void createConnection(Widget source, Widget target) {
-            ConnectionWidget conn = new ConnectionWidget(scene);
-            conn.setTargetAnchorShape(AnchorShape.TRIANGLE_FILLED);
-            conn.setTargetAnchor(AnchorFactory.createRectangularAnchor(target));
-            conn.setSourceAnchor(AnchorFactory.createRectangularAnchor(source));
-            connectionLayer.addChild(conn);
+            boolean result = addEdge(((VMDPinWidget)source).getPinName(),
+                    ((VMDPinWidget)target).getPinName() );
+            /*
+            if( result ) {
+                JOptionPane.showMessageDialog(null, "Pins connected");
+            } else {
+                JOptionPane.showMessageDialog(null, "Couldn't connect pins");
+            }
+            */
         }
 
     }
     
+    private final class KeyboardDeleteActionWidget extends WidgetAction.Adapter {
+        @Override
+        public WidgetAction.State keyPressed(Widget widget, WidgetAction.WidgetKeyEvent event) {
+            if( widget instanceof ConnectionWidget ) {
+                //System.out.println("Got key on widget: "+((VMDNodeWidget)widget).getNodeName());
+                System.out.println("Removing connection widget");
+                widget.removeFromParent();
+            } else {
+                System.out.println("Got key on other widget");
+            }
+            /*
+            if (event.getKeyCode() == KeyEvent.VK_DELETE ) {
+                widget.removeFromParent();
+            }
+                    */
+            return State.CONSUMED;
+        }
+    }
 }
