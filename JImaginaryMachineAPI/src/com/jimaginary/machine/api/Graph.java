@@ -138,6 +138,28 @@ public class Graph extends Observable {
         return node.getId();
     }
     
+    public boolean removeNodeByName( String nodeName ) {
+        for( int i = 0 ; i < allNodes.size() ; i++ ) {
+            if( allNodes.get(i).getName().equals(nodeName) && allNodes.get(i).getType() != GraphNode.START ) {
+                allNodes.get(i).remove();
+                setChanged();
+                return true;    
+            }
+        }
+        return false;
+    }
+    
+    public boolean removeNodeById( int id ) {
+        for( int i = 0 ; i < allNodes.size() ; i++ ) {
+            if( allNodes.get(i).getId() == id && allNodes.get(i).getType() != GraphNode.START ) {
+                allNodes.get(i).remove();
+                setChanged();
+                return true;    
+            }
+        }
+        return false;
+    }
+    
     public void finishChanges() {
         notifyObservers();
     }

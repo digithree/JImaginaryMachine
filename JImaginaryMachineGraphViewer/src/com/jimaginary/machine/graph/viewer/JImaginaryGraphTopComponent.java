@@ -7,6 +7,7 @@ package com.jimaginary.machine.graph.viewer;
 
 import com.jimaginary.machine.api.Graph;
 import com.jimaginary.machine.api.GraphData;
+import com.jimaginary.machine.api.GraphNode;
 import com.jimaginary.machine.math.Matrix;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
@@ -15,9 +16,11 @@ import java.awt.event.KeyEvent;
 import java.beans.PropertyVetoException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Observable;
 import java.util.Observer;
+import java.util.Set;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
@@ -46,6 +49,8 @@ import org.openide.DialogDisplayer;
 import org.openide.NotifyDescriptor;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
+import org.openide.awt.StatusDisplayer;
+import org.openide.awt.StatusLineElementProvider;
 import org.openide.explorer.ExplorerManager;
 import org.openide.explorer.ExplorerUtils;
 import org.openide.nodes.AbstractNode;
@@ -55,6 +60,7 @@ import org.openide.nodes.NodeOperation;
 import org.openide.nodes.PropertySupport;
 import org.openide.nodes.Sheet;
 import org.openide.util.Exceptions;
+import org.openide.util.Lookup;
 import org.openide.util.LookupEvent;
 import org.openide.util.LookupListener;
 import org.openide.windows.TopComponent;
@@ -98,6 +104,7 @@ public final class JImaginaryGraphTopComponent extends TopComponent
     //private LayerWidget layer;
     private LayerWidget connectionLayer;
     private final List<GraphNodeItem> graphNodeItems;
+    
 
     public JImaginaryGraphTopComponent() {
         initComponents();
@@ -141,6 +148,7 @@ public final class JImaginaryGraphTopComponent extends TopComponent
         connectionLayer = new LayerWidget(scene);
         scene.addChild(connectionLayer);        
         scene.setKeyEventProcessingType(EventProcessingType.FOCUSED_WIDGET_AND_ITS_CHILDREN);
+        scene.setKeyEventProcessingType(EventProcessingType.FOCUSED_WIDGET_AND_ITS_PARENTS);
         graphNodeItems.clear();
     }
     
@@ -163,9 +171,11 @@ public final class JImaginaryGraphTopComponent extends TopComponent
         }
         String edge = "edge-" + edgeCount++;
         System.out.println("Trying to add edge ("+edge+") from "+pinFrom+" to "+pinTo);
-        scene.addEdge(edge);
+        Widget widget = scene.addEdge(edge);
         scene.setEdgeSource(edge,pinFrom);
         scene.setEdgeTarget(edge,pinTo);
+        // add key action to edges
+        //widget.getActions().addAction(new KeyboardDeleteActionWidget());
         return true;
     }
     
@@ -207,7 +217,7 @@ public final class JImaginaryGraphTopComponent extends TopComponent
             }
 
         }));
-        widget.getActions().addAction(new KeyboardDeleteActionWidget());
+        //widget.getActions().addAction(new KeyboardDeleteActionWidget());
         /*
         widget.getActions().addAction(ActionFactory.createPopupMenuAction(new PopupMenuProvider() {
             @Override
@@ -267,7 +277,7 @@ public final class JImaginaryGraphTopComponent extends TopComponent
             }
         }));
         */
-        
+        scene.getActions().addAction(new KeyboardDeleteActionWidget());
         // click on graphWindow action
         scene.getActions().addAction(ActionFactory.createSelectAction(new SelectProvider() {
             @Override
@@ -283,11 +293,13 @@ public final class JImaginaryGraphTopComponent extends TopComponent
             @Override
             public void select(Widget sentWidget, Point loc, boolean bln) {
                 if( GraphData.getGraph() == null ) {
-                    JOptionPane.showMessageDialog(null, "Couldn't add node, no graph set");
+                    //JOptionPane.showMessageDialog(null, "Couldn't add node, no graph set");
+                    StatusDisplayer.getDefault().setStatusText("Couldn't add node, no graph set");
                     return;
                 }
                 if( GraphData.getNodeName() == null ) {
-                    JOptionPane.showMessageDialog(null, "Couldn't add node, no node type selected");
+                    //JOptionPane.showMessageDialog(null, "Couldn't add node, no node type selected");
+                    StatusDisplayer.getDefault().setStatusText("Couldn't add node, no node type selected");
                     return;
                 }
                 NotifyDescriptor d = new NotifyDescriptor
@@ -304,8 +316,10 @@ public final class JImaginaryGraphTopComponent extends TopComponent
                         item.setParameter("Bernoulli:0.5");
                         // fires message to listening nodes of any changes
                         //GraphData.getGraph().finishChanges();
+                        StatusDisplayer.getDefault().setStatusText("Added node: "+item.getDisplayName());
                     } else {
-                        JOptionPane.showMessageDialog(null, "Couldn't add node: "+GraphData.getNodeName());
+                        //JOptionPane.showMessageDialog(null, "Couldn't add node: "+GraphData.getNodeName());
+                        StatusDisplayer.getDefault().setStatusText("Couldn't add node: "+GraphData.getNodeName());
                     }
                 }
             }
@@ -398,14 +412,6 @@ public final class JImaginaryGraphTopComponent extends TopComponent
         }
         // layout scene (uses force-directed layout)
         scene.layoutScene();
-        // add key action to edges
-        System.out.println("trying to add KeyboardDeleteActionWidget action to VMDConnectionWidgets...");
-        for( Widget widget : scene.getChildren() ) {
-            if( widget instanceof VMDConnectionWidget ) {
-                widget.getActions().addAction(new KeyboardDeleteActionWidget());
-                System.out.println("added KeyboardDeleteActionWidget to connection widget");
-            }
-        }
     }
 
     @Override
@@ -588,34 +594,119 @@ public final class JImaginaryGraphTopComponent extends TopComponent
 
         @Override
         public void createConnection(Widget source, Widget target) {
-            boolean result = addEdge(((VMDPinWidget)source).getPinName(),
-                    ((VMDPinWidget)target).getPinName() );
-            /*
-            if( result ) {
-                JOptionPane.showMessageDialog(null, "Pins connected");
-            } else {
-                JOptionPane.showMessageDialog(null, "Couldn't connect pins");
+            String sourcePin = (String)scene.findObject(source);
+            String targetPin = (String)scene.findObject(target);
+            if( sourcePin == null || targetPin == null ) {
+                StatusDisplayer.getDefault().setStatusText("connection nodes: couldn't find pin object from widget");
+                return;
             }
-            */
+            int sourceId = Integer.parseInt(sourcePin.split("[-]")[0]);
+            int targetId = Integer.parseInt(targetPin.split("[-]")[0]);
+            GraphNode sourceNode = GraphData.getGraph().getNodeById(sourceId);
+            GraphNode targetNode = GraphData.getGraph().getNodeById(targetId);
+            if( sourceNode == null || targetNode == null ) {
+                StatusDisplayer.getDefault().setStatusText("connection nodes: couldn't find nodes to connect in data model!");
+                return;
+            } // else go for it
+            boolean result = sourceNode.addNext(targetNode);
+            if( !result ) {
+                StatusDisplayer.getDefault().setStatusText("connection nodes: couldn't connect nodes in graph data model!");
+                return;
+            }
+            result = addEdge(((VMDPinWidget)source).getPinName(),
+                    ((VMDPinWidget)target).getPinName() );
+            if( result ) {
+                StatusDisplayer.getDefault().setStatusText("connection nodes: Pins connected");
+            } else {
+                //JOptionPane.showMessageDialog(null, "Couldn't connect pins");
+                StatusDisplayer.getDefault().setStatusText("connection nodes: Couldn't connect pins (visual)");
+            }
         }
-
+    }
+    
+    private boolean addEdgeToGraphData(int sourceId, int targetId) {
+        
+        return false;
     }
     
     private final class KeyboardDeleteActionWidget extends WidgetAction.Adapter {
         @Override
         public WidgetAction.State keyPressed(Widget widget, WidgetAction.WidgetKeyEvent event) {
-            if( widget instanceof ConnectionWidget ) {
+            /*
+            if( widget instanceof VMDGraphScene ) {
                 //System.out.println("Got key on widget: "+((VMDNodeWidget)widget).getNodeName());
-                System.out.println("Removing connection widget");
-                widget.removeFromParent();
+                System.out.println("Got key on VMDGraphScene");
+                //widget.removeFromParent();
+                //scene.removeEdge(((ConnectionWidget)widget).toString());
+                Set selected = scene.getSelectedObjects();
+                //List<Node> selectedNodes = new ArrayList();
+                for (Object obj : selected) {
+                   if (obj instanceof Node){
+                       //selectedNodes.add((Node)obj);
+                       System.out.println("node "+((Node)obj).getName()+" is selected");
+                   }
+                }
+                // remove?
             } else {
                 System.out.println("Got key on other widget");
             }
-            /*
-            if (event.getKeyCode() == KeyEvent.VK_DELETE ) {
-                widget.removeFromParent();
+            */
+            System.out.println("--- key pressed, captured by scene --- ");
+            if (event.getKeyCode() == KeyEvent.VK_DELETE || event.getKeyCode() == KeyEvent.VK_BACK_SPACE ) {
+                System.out.println("is delete key");
+                //widget.removeFromParent();
+                Set selected = scene.getSelectedObjects();
+                //List<Node> selectedNodes = new ArrayList();
+                System.out.println("nodes selected = "+selected.size());
+                for (Object obj : selected) {
+                   if (obj instanceof String){
+                       String str = (String)obj;
+                       System.out.println("String found "+str+" is selected");
+                       if( str.contains("pin") ) {
+                           //JOptionPane.showMessageDialog(null, "Can't delete pin "+str+" directly, delete node instead");
+                           StatusDisplayer.getDefault().setStatusText("Can't delete pin "+str+" directly, delete node instead");
+                           return State.CONSUMED;
+                       }
+                       NotifyDescriptor d = new NotifyDescriptor
+                                .Confirmation("Delete "+str+" ?"
+                                    , "Dialog Title", NotifyDescriptor.OK_CANCEL_OPTION);
+                       if (DialogDisplayer.getDefault().notify(d) == NotifyDescriptor.OK_OPTION) {
+                            if( !str.contains("edge") ) {
+                                // then is node
+                                System.out.println("** removing, is node");
+                                if( GraphData.getGraph().removeNodeById(Integer.parseInt(str.split("[-]")[1])) ) {
+                                    scene.removeNodeWithEdges(str);    
+                                    StatusDisplayer.getDefault().setStatusText("removed node: "+str);
+                                } else {
+                                    StatusDisplayer.getDefault().setStatusText("couldn't remove node: "+str);
+                                }
+                            } else {
+                                // is edge
+                                System.out.println("** removing, is edge");
+                                String sourcePin = scene.getEdgeSource(str);
+                                String targetPin = scene.getEdgeTarget(str);
+                                int sourceId = Integer.parseInt(sourcePin.split("[-]")[0]);
+                                int targetId = Integer.parseInt(targetPin.split("[-]")[0]);
+                                GraphNode sourceNode = GraphData.getGraph().getNodeById(sourceId);
+                                GraphNode targetNode = GraphData.getGraph().getNodeById(targetId);
+                                if( sourceNode == null || targetNode == null ) {
+                                    //JOptionPane.showMessageDialog(null, "couldn't find edge in data model!");
+                                    StatusDisplayer.getDefault().setStatusText("couldn't find edge in data model!");
+                                    return State.CONSUMED;
+                                }
+                                // else, remove
+                                if( !sourceNode.removeNextConnection(targetNode) ) {
+                                    //JOptionPane.showMessageDialog(null, "problem removing node edge from underlying data model!");
+                                    StatusDisplayer.getDefault().setStatusText("problem removing node edge from underlying data model!");
+                                }
+                                scene.removeEdge(str);
+                            }
+                            GraphData.getGraph().finishChanges();
+                       }
+                   }
+                }
+                // remove?
             }
-                    */
             return State.CONSUMED;
         }
     }

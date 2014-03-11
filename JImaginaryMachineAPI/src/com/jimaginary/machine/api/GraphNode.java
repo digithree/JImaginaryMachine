@@ -102,6 +102,21 @@ public class GraphNode implements Comparable<GraphNode> {
         }
         return false;
     }
+    
+    // this method will only add next if there is a free space, unlike the
+    // other method which you must supply an idx for
+    public boolean addNext( GraphNode _next ) {
+        if( next != null && _next != null ) {
+            for( int i = 0 ; i < next.length ; i++ ) {
+                if( next[i] == null ) {
+                    next[i] = _next;
+                    next[i].previous.add(this);
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
 
     protected boolean addNext( int idx, GraphNode _next ) {
         if( next != null ) {
@@ -132,6 +147,17 @@ public class GraphNode implements Comparable<GraphNode> {
                 node.previous.remove(this);
             }
         }
+    }
+    
+    public boolean removeNextConnection( GraphNode node ) {
+        for( int i = 0 ; i < next.length ; i++ ) {
+            if( next[i] == node ) {
+                node.previous.remove(this);
+                next[i] = null;
+                return true;
+            }
+        }
+        return false;
     }
 
     // PROCESSING - actually process the graph

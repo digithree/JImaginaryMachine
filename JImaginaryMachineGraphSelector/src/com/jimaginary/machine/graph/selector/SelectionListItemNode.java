@@ -17,6 +17,7 @@ import javax.swing.Action;
 import javax.swing.JOptionPane;
 import org.netbeans.api.visual.action.ConnectProvider;
 import org.openide.ErrorManager;
+import org.openide.awt.StatusDisplayer;
 import org.openide.nodes.AbstractNode;
 import org.openide.nodes.Children;
 import org.openide.nodes.PropertySupport;
@@ -109,7 +110,8 @@ public class SelectionListItemNode extends AbstractNode implements PropertyChang
             SelectionListItem obj = getLookup().lookup(SelectionListItem.class);
             GraphData.setGraph(GraphFactory.createGraph(obj.getType()));
             GraphFactory.finishGraph(GraphData.getGraph());
-            JOptionPane.showMessageDialog(null, "Created new empty " + obj);
+            //JOptionPane.showMessageDialog(null, "Created new empty " + obj);
+            StatusDisplayer.getDefault().setStatusText("Created new empty " + obj);
         }
     }
     
@@ -123,7 +125,8 @@ public class SelectionListItemNode extends AbstractNode implements PropertyChang
             SelectionListItem obj = getLookup().lookup(SelectionListItem.class);
             GraphData.setGraph(GraphFactory.createGraph(obj.getType()));
             GraphFactory.randomiseGraph(GraphData.getGraph());
-            JOptionPane.showMessageDialog(null, "Created new random " + obj);
+            //JOptionPane.showMessageDialog(null, "Created new random " + obj);
+            StatusDisplayer.getDefault().setStatusText("Created new random " + obj);
         }
     }
     
