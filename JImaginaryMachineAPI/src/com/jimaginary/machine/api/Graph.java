@@ -6,10 +6,12 @@
 
 package com.jimaginary.machine.api;
 
+import com.jimaginary.machine.generalgraph.StartNode;
 import com.jimaginary.machine.math.Bernoulli;
 import com.jimaginary.machine.math.Matrix;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.Observable;
 import org.openide.windows.IOProvider;
 import org.openide.windows.InputOutput;
@@ -36,6 +38,9 @@ public class Graph extends Observable {
                                                     0.0, 0.4, 0.35, 0.0, 0.25,
                                                     0.0, 0.45, 0.0, 0.35, 0.2
                                                         };
+    
+    private final static String []nodeNameList = { "StartNode", "Choice2Node" };
+    
     GraphNode headNode;
     Matrix adjacencyMatrix;
     ArrayList<GraphNode> allNodes;
@@ -46,6 +51,7 @@ public class Graph extends Observable {
 
     // SetCollections
     private final SetCollection inputSetCollection, outputSetCollection;
+    private final String graphNodeResourceName;
 
     // process
     GraphPacket graphPacket, lastGraphPacket;
@@ -54,13 +60,17 @@ public class Graph extends Observable {
     public Graph( SetCollection _inputSetCollection, SetCollection _outputSetCollection ) {
         inputSetCollection = _inputSetCollection;
         outputSetCollection = _outputSetCollection;
+        graphNodeResourceName = inputSetCollection.getGraphNodeResourceName();
         allNodes = new ArrayList<GraphNode>();
         shakeOut = false;
         transitionsForBuilding = new Matrix(NUM_NODES,NUM_NODES);
         transitionsForBuilding.set( MARKOV_CHAIN_NODE_SELECTION_PROBS );
         graphPacket = new GraphPacket(inputSetCollection,outputSetCollection);
         lastGraphPacket = null; // why use this?
-        setupManditoryNodes();
+        // add StartNode to head
+        headNode = (GraphNode)new StartNode();
+        allNodes.add(headNode);
+        addManditoryNodes();
         setChanged();
     }
     
@@ -85,26 +95,11 @@ public class Graph extends Observable {
         return null;
     }
 
-    private void setupManditoryNodes() {
-        System.out.println("Graph : setupManditoryNodes");
-        // add StartNode to head
-        headNode = (GraphNode)new StartNode();
-        allNodes.add(headNode);
-        // add manditory nodes from input set collection
-        GraphNode inNodes[] = inputSetCollection.generateManditoryFirstModifyNodes();
-        if( inNodes != null ) {
-            for( GraphNode node : inNodes ) {
-                node.randomiseParameters();
-                allNodes.add(node);
-            }
-        }
-        // add manditory nodes from input set collection
-        GraphNode outNodes[] = outputSetCollection.generateManditoryFirstModifyNodes();
-        if( outNodes != null ) {
-            for( GraphNode node : outNodes ) {
-                node.randomiseParameters();
-                allNodes.add(node);
-            }
+    private void addManditoryNodes() {
+        System.out.println("Graph : addManditoryNodes");
+        List<GraphNode> manditoryNodes = GraphNodeResourceService.getInstance().getManditoryGraphNodes(graphNodeResourceName);
+        for( GraphNode node : manditoryNodes ) {
+            allNodes.add(node);
         }
         // connect nodes
         //   note: assume nodes only accept one connection
@@ -124,18 +119,15 @@ public class Graph extends Observable {
         setChanged();
     }
     
-    public int addNodeByName( String nodeName ) {
-        GraphNode node = inputSetCollection.getGraphNodeByName(nodeName);
+    public GraphNodeInfo addNodeByName( String nodeName ) {
+        GraphNode node = GraphNodeResourceService.getInstance().createGraphNodeByName(nodeName);
         if( node == null ) {
-            node = outputSetCollection.getGraphNodeByName(nodeName);
-        }
-        if( node == null ) {
-            return -1;
+            return null;
         }
         // else, we got a node
         allNodes.add(node);
         setChanged();
-        return node.getId();
+        return node.getInfo();
     }
     
     public boolean removeNodeByName( String nodeName ) {
@@ -222,26 +214,23 @@ public class Graph extends Observable {
         for( int i = 0 ; i < numNodes ; i++ ) {
             int selectedNode = Utils.getIdxFromProbTable(STANDARD_NODE_SELECTION_PROBS);
             GraphNode node = null;
-            switch( selectedNode+1 ) {
-                case GraphNode.SAMPLE:
-                    node = inputSetCollection.generateSampleNode();
-                    break;
-                case GraphNode.WRITE:
-                    node = outputSetCollection.generateWriteNode();
-                    break;
-                case GraphNode.CHOICE:
-                    node = (GraphNode)new Choice2Node();
-                    break;
-                case GraphNode.MODIFY:
-                    int modifyInOrOut = Utils.getIdxFromProbTable(STANDARD_NODE_SELECTION_PROBS_MODIFY);
-                    if( modifyInOrOut == 0 ) {
-                            node = inputSetCollection.generateModifyNode();
-                    } else {
-                            node = outputSetCollection.generateModifyNode();
+            int type = (selectedNode+1);
+            List<GraphNodeInfo> infos = GraphNodeResourceService.getInstance().getAllGraphNodesInfo(graphNodeResourceName);
+            List<GraphNodeInfo> rightTypeInfos = new ArrayList<GraphNodeInfo>();
+            for( GraphNodeInfo info : infos ) {
+                if( info != null ) {
+                    if( info.getType() == type ) {
+                        rightTypeInfos.add(info);
                     }
+                }
+            }
+            if( !rightTypeInfos.isEmpty() ) {
+                int idx = Utils.getIdxFromProbTable(Utils.createUniformProbTable(rightTypeInfos.size()));
+                node = GraphNodeResourceService.getInstance().createGraphNodeByName(
+                        rightTypeInfos.get(idx).getGraphNodeName());
             }
             if( node != null ) {
-                io.getOut().println( "created node: "+node.name);
+                io.getOut().println( "created node: "+node.getName());
                 node.randomiseParameters();
                 addNode(node);
             } else {
@@ -252,7 +241,7 @@ public class Graph extends Observable {
         // connect nodes (we will connect ALL possible connections)
         for( GraphNode fromNode : allNodes ) {
             if( !fromNode.nextNodesSet() ) {
-                io.getOut().println( "**Connecting node: "+fromNode.name);
+                io.getOut().println( "**Connecting node: "+fromNode.getName());
                 // create prob table with connection to self weighted down
                 int fromNodeType = fromNode.getType();
                 float connectionWeights[] = new float[allNodes.size()];
@@ -281,10 +270,10 @@ public class Graph extends Observable {
                         io.getOut().print( idx + " ");
                         if( allNodes.get(idx).willAcceptConnectionFrom(fromNode) ) {
                             if( fromNode.addNext(i,allNodes.get(idx)) ) {
-                                io.getOut().println( "\n   SET! to node "+allNodes.get(idx).name);
+                                io.getOut().println( "\n   SET! to node "+allNodes.get(idx).getName());
                                 done = true;
                             } else {
-                                io.getOut().println( "\n   couldn't set to node "+allNodes.get(idx).name);
+                                io.getOut().println( "\n   couldn't set to node "+allNodes.get(idx).getName());
                             }
                         }
                     }
@@ -298,17 +287,17 @@ public class Graph extends Observable {
             changeMade = false;
             for( int i = 0 ; i < allNodes.size() ; i++ ) {
                 if( !(allNodes.get(i) instanceof StartNode) ) {
-                    io.getOut().println( allNodes.get(i).name+" parents:");
+                    io.getOut().println( allNodes.get(i).getName()+" parents:");
                     int numPrevious = 0;
                     for( GraphNode node : allNodes.get(i).previous ) {
                         if( node != null ) {
-                            io.getOut().println( "\t\t"+node.name);
+                            io.getOut().println( "\t\t"+node.getName());
                             numPrevious++;
                         }
                     }
                     io.getOut().println( "\t\thas "+numPrevious+" parents");
                     if( numPrevious == 0 || (numPrevious == 1 && allNodes.get(i) == allNodes.get(i).previous.get(0)) ) {
-                        io.getOut().println( "removing "+allNodes.get(i).name);
+                        io.getOut().println( "removing "+allNodes.get(i).getName());
                         allNodes.get(i).remove();
                         allNodes.remove(i);
                         changeMade = true;
@@ -328,7 +317,7 @@ public class Graph extends Observable {
             noChange = true;
             for(GraphNode node : allNodes) {
                 if( !verifiedNodes.contains(node) ) {
-                    io.getOut().println( "\tremoved "+node.name+", not reachable"); 
+                    io.getOut().println( "\tremoved "+node.getName()+", not reachable"); 
                     node.remove();
                     allNodes.remove(node);
                     noChange = false;
@@ -352,7 +341,7 @@ public class Graph extends Observable {
         finishChanges();
         return atLeastOnePick & atLeastOnePut;
     }
-    
+
     public class GraphPacket {
         public SetCollection inputSetCollection;
         public SetCollection outputSetCollection;
@@ -373,50 +362,4 @@ public class Graph extends Observable {
             }
         }
     }
-    
-    public class StartNode extends GraphNode {
-        StartNode() {
-            super("Start",START,0,1);
-            acceptsConnection = false;
-            description = "Process starts";
-        }
-
-        // don't need processing, but just for console output
-        @Override
-        public GraphNode process( GraphPacket graphPacket ) {
-            System.out.println( "\n\n"+name +" \t\t- starting processing ");
-            return next[0];
-        }
-    }
-
-    // PUT NOTE
-    public class Choice2Node extends GraphNode {
-        final float NODE_CHOICE_MIN_VAL = 0.15f;
-        
-        private final int PARAM_CHOICE = 0;
-        private final float CHOICE_PROB = 0.5f;
-
-        Choice2Node() {
-            super("2 Choice",CHOICE,1,2);
-            //default values for choices, uniform
-            setParameter(PARAM_CHOICE, new Bernoulli(CHOICE_PROB)); 
-            getParameter(PARAM_CHOICE).setAlwaysRandomise(true);
-        }
-
-        @Override
-        public void refreshDescription() {
-            description = "Choose A P["+String.format("%.2f",parameters[0].getParameter(0))+"] or B P["
-                +String.format("%.2f",(1.f-parameters[0].getParameter(0)))+"]";
-        }
-
-        // override
-        @Override
-        public GraphNode process( GraphPacket graphPacket ) {
-            int choice = (int)getParameter(PARAM_CHOICE).evaluate();
-            
-            System.out.println(name+" \t\t- choose "+(choice==0?"A":"B"));
-            return next[choice];
-        }
-    }
-
 }

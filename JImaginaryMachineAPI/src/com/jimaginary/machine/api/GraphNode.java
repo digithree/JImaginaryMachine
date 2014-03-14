@@ -7,13 +7,15 @@
 package com.jimaginary.machine.api;
 
 import com.jimaginary.machine.math.MathFunction;
+import com.jimaginary.machine.math.MathFunctionFactory;
+import java.text.ParseException;
 import java.util.ArrayList;
 
 /**
  *
  * @author simonkenny
  */
-public class GraphNode implements Comparable<GraphNode> {
+public abstract class GraphNode implements Comparable<GraphNode> {
     static int ID_COUNT = 0;
     
     public final static int START = 0;
@@ -22,8 +24,6 @@ public class GraphNode implements Comparable<GraphNode> {
     public final static int CHOICE = 3;
     public final static int MODIFY = 4;
 
-    int id = ID_COUNT++;
-    int type;
     ArrayList<GraphNode> previous;
     GraphNode []next;
     int maxNextConnections;
@@ -33,12 +33,13 @@ public class GraphNode implements Comparable<GraphNode> {
     boolean acceptsConnection;
     boolean allowsSelfConnection;
     boolean valid;
-    String name;
     String description;
+    
+    private final GraphNodeInfo info;
 
-    public GraphNode( String _name, int _type, int _numParameters, int maxChildren ) {
-        type = _type;
-        name = _name;
+    public GraphNode( String name, int type, int _numParameters, int maxChildren ) {
+        info = new GraphNodeInfo(ID_COUNT++,name,type,numParameters,maxChildren);
+        
         previous = new ArrayList<GraphNode>();
         maxNextConnections = maxChildren;
         next = new GraphNode[maxNextConnections];
@@ -48,9 +49,17 @@ public class GraphNode implements Comparable<GraphNode> {
         allowsSelfConnection = false;
         valid = true;
     }
+    
+    public GraphNodeInfo getInfo() {
+        return info;
+    }
 
     public boolean isInvalid() {
         return !valid;
+    }
+    
+    protected void setAcceptsConnection(boolean flag) {
+        acceptsConnection = flag;
     }
 
     protected boolean willAcceptConnection() {
@@ -74,10 +83,7 @@ public class GraphNode implements Comparable<GraphNode> {
     }
 
     //override
-    public void refreshDescription() {
-        // in sub-class: set description text via
-        //		setNameAndDescription(null, "description text");
-    }
+    public abstract void refreshDescription();
 
     public void randomiseParameters() {
         for( MathFunction param : parameters ) {
@@ -111,6 +117,8 @@ public class GraphNode implements Comparable<GraphNode> {
                 if( next[i] == null ) {
                     next[i] = _next;
                     next[i].previous.add(this);
+                    // update info
+                    info.setConnectedTo(i, _next.getName() );
                     return true;
                 }
             }
@@ -123,9 +131,11 @@ public class GraphNode implements Comparable<GraphNode> {
             if( _next != null && idx >= 0 && idx < next.length ) {
                 if( _next.acceptsConnection ) {
                     if( !(allowsSelfConnection && this != _next) ) {
-                        System.out.println( name+"\taddNext: added "+_next.name+" to next["+idx+"]");
+                        System.out.println( info.getName()+"\taddNext: added "+_next.getName()+" to next["+idx+"]");
                         next[idx] = _next;
                         next[idx].previous.add(this);
+                        // update info
+                        info.setConnectedTo(idx, _next.getName() );
                         return true;
                     }
                 }
@@ -147,6 +157,7 @@ public class GraphNode implements Comparable<GraphNode> {
                 node.previous.remove(this);
             }
         }
+        info.setActive(false);
     }
     
     public boolean removeNextConnection( GraphNode node ) {
@@ -154,6 +165,8 @@ public class GraphNode implements Comparable<GraphNode> {
             if( next[i] == node ) {
                 node.previous.remove(this);
                 next[i] = null;
+                // update info
+                info.setConnectedTo(i, null);
                 return true;
             }
         }
@@ -162,28 +175,28 @@ public class GraphNode implements Comparable<GraphNode> {
 
     // PROCESSING - actually process the graph
     protected ArrayList<GraphNode> verify( ArrayList<GraphNode> verifiedNodes ) {
-        System.out.println( name+"\t\t- verifying...");
+        System.out.println( getName()+"\t\t- verifying...");
         if( !verifiedNodes.contains(this) ) {
-            System.out.println( name+"\t\t- verified");
+            System.out.println( getName()+"\t\t- verified");
             verifiedNodes.add(this);
         }
-        System.out.println( name+"\t\t- next nodes...");
+        System.out.println( getName()+"\t\t- next nodes...");
         for( GraphNode node : next ) {
             if( node != null && node != this &&!verifiedNodes.contains(node) ) {
-                System.out.println( name+"\t\t- moving to "+node.name);
+                System.out.println( getName()+"\t\t- moving to "+node.getName());
                 ArrayList<GraphNode> nextVerifiedNodes = node.verify(verifiedNodes);
-                System.out.println( name+"\t\t- merging...");
+                System.out.println( getName()+"\t\t- merging...");
                 for( GraphNode newNode : nextVerifiedNodes ) {
                     if( !verifiedNodes.contains(newNode) ) {
-                        System.out.println( name+"\t\t- merged "+newNode.name);
+                        System.out.println( getName()+"\t\t- merged "+newNode.getName());
                         verifiedNodes.add(newNode);
                     }
                 }
             } else {
-                System.out.println( name+"\t\t-    node doesn't exist or is self");
+                System.out.println( getName()+"\t\t-    node doesn't exist or is self");
             }
         }
-        System.out.println( name+"\t\t- return");
+        System.out.println( getName()+"\t\t- return");
         return verifiedNodes;
     }
 
@@ -193,27 +206,42 @@ public class GraphNode implements Comparable<GraphNode> {
         return null;
     }
     
+    // IMPORTANT! all nodes must call this at the start of process(...) call
+    public boolean updateParametersFromInfoString() throws ParseException {
+        boolean madeChange = false;
+        for( int i = 0 ; i < numParameters ; i++ ) {
+            if( !parameters[i].toString().equals(info.getParameter(i)) ) {
+                parameters[i] = MathFunctionFactory.createByParse(info.getParameter(i));
+                madeChange = true;
+            }
+        }
+        return madeChange;
+    }
+    
     // accessors
     // setters
     protected void setId(int _id) {
-        id = _id;
+        info.setId(_id);
     }
     
     protected void setName(String _name) {
-        name = _name;
+        info.setName(_name);
     }
     
     protected void setDescription(String _description) {
         description = _description;
     }
     
-    protected void setParameter(int idx, MathFunction func) {
+    public boolean setParameter(int idx, MathFunction func) {
         if( idx >= 0 && idx < numParameters ) {
             parameters[idx] = func;
+            info.setParameter(idx, func.toString());
+            if( parametersAreInitialised() ) {
+                refreshDescription();
+            }
+            return true;
         }
-        if( parametersAreInitialised() ) {
-            refreshDescription();
-        }
+        return false;
     }
     
     protected boolean parametersAreInitialised() {
@@ -231,15 +259,15 @@ public class GraphNode implements Comparable<GraphNode> {
     
     // getters
     public int getType() {
-        return type;
+        return info.getType();
     }
     
     public String getName() {
-        return name;
+        return info.getName();
     }
     
     public int getId() {
-        return id;
+        return info.getId();
     }
     
     protected String getDescription() {
@@ -274,6 +302,6 @@ public class GraphNode implements Comparable<GraphNode> {
 
     @Override
     public int compareTo(GraphNode otherNode) {
-        return id - otherNode.getId();
+        return getId() - otherNode.getId();
     }
 }

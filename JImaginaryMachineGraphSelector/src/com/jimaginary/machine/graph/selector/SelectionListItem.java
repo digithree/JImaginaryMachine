@@ -18,10 +18,10 @@ import java.util.List;
  */
 public class SelectionListItem {
     public static final int GRAPH = 0;
-    public static final int IN_NODE = 1;
-    public static final int OUT_NODE = 2;
+    public static final int NOT_GRAPH = 1;
     
     String name;
+    String resPackName;
     int type;
     String description;
     
@@ -49,6 +49,11 @@ public class SelectionListItem {
         return this;
     }
     
+    public SelectionListItem setResPackName(String _name) {
+        resPackName = _name;
+        return this;
+    }
+    
     public SelectionListItem setDescription(String _description) {
         description = _description;
         return this;
@@ -65,6 +70,10 @@ public class SelectionListItem {
     
     public String getName() {
         return name;
+    }
+    
+    public String getResPackName() {
+        return resPackName;
     }
     
     @Override

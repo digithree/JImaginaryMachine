@@ -170,7 +170,6 @@ public abstract class MathFunction {
         return null;
     }
     
-    abstract public float evaluate(float x);
     abstract public float evaluate();
     
     public float lastValue() {
@@ -183,5 +182,14 @@ public abstract class MathFunction {
         }
         // else
         return evaluate();
+    }
+    
+    @Override
+    public String toString() {
+        String retStr = name;
+        for( int i = 0 ; i < paramVals.length ; i++ ) {
+            retStr += ":"+paramVals[i];
+        }
+        return retStr;
     }
 }

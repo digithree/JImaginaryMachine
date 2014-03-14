@@ -6,7 +6,9 @@
 
 package com.jimaginary.machine.graph.selector;
 
-import com.jimaginary.graph.module.reg.GraphFactory;
+import com.jimaginary.machine.api.GraphNodeInfo;
+import com.jimaginary.machine.api.GraphNodeResourceService;
+import com.jimaginary.machine.services.GraphFactory;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -21,13 +23,6 @@ import org.openide.util.HelpCtx;
 public class SelectionListItemNodeChildFactory extends ChildFactory<SelectionListItem>
             implements HelpCtx.Provider {
     
-    private final String[] graphTypeNames = {
-        "Midi Phrase Builder(Modal)",
-        "Midi Phrase Structurer",
-        "PCM Concat Synth",
-        "Gamelan Phrase Builder"
-    };
-    
     private final SelectionListItem item;
     
     public SelectionListItemNodeChildFactory() {
@@ -41,38 +36,41 @@ public class SelectionListItemNodeChildFactory extends ChildFactory<SelectionLis
     @Override
     protected boolean createKeys(List<SelectionListItem> listToPopulate) {
         if( item == null ) {
+            System.out.println("SelectionListItemNodeChildFactory : createKeys - creating top level");
             // this is root node, create package type list
-            SelectionListItem []items = new SelectionListItem[4];
-            for( int i = 0 ; i < 4 ; i++ ) {
-                items[i] = new SelectionListItem().setName(graphTypeNames[i])
-                        .setType(0)     // root node type
-                        .setDescription(GraphFactory.getGraphDescription(i))
-                        ;
+            List<SelectionListItem> items = new ArrayList<SelectionListItem>();
+            List<String> graphNames = GraphNodeResourceService.getInstance().getAllGraphNodeResPackNames();
+            List<String> graphFriendlyNames = GraphNodeResourceService.getInstance().getAllGraphFriendlyNames();
+            List<String> graphDescriptions = GraphNodeResourceService.getInstance().getAllGraphDescriptions();
+            for( int i = 0 ; i < graphNames.size() ; i++ ) {
+                items.add( new SelectionListItem()
+                        .setName(graphFriendlyNames.get(i))
+                        .setResPackName(graphNames.get(i))
+                        .setType(SelectionListItem.GRAPH)     // root node type
+                        .setDescription(graphDescriptions.get(i))
+                );
             }
-            listToPopulate.addAll(Arrays.asList(items));
+            System.out.println("SelectionListItemNodeChildFactory : createKeys - created "+graphNames.size() + " graphs");
+            listToPopulate.addAll(items);
         } else {
-            // this is a grpah package type node, populate with GraphNode nodes
-            String []inNodes = GraphFactory.getInputSetCollectionNodeNames(item.getType());
-            String []outNodes = GraphFactory.getOutputSetCollectionNodeNames(item.getType());
-            List<String> nodeNameList = new ArrayList<String>();
-            if( inNodes != null ) {
-                nodeNameList.addAll(Arrays.asList(inNodes));
-            }
-            if( outNodes != null ) {
-                nodeNameList.addAll(Arrays.asList(outNodes));
-            }
-            if( !nodeNameList.isEmpty() ) {
+            System.out.println("SelectionListItemNodeChildFactory : creating sub level");
+            List<GraphNodeInfo> nodeInfoList = GraphNodeResourceService.getInstance().getAllGraphNodesInfo(item.getResPackName());
+            if( !nodeInfoList.isEmpty() ) {
                 List<SelectionListItem> nodeList = new ArrayList<SelectionListItem>();
                 int count = 0;
-                for( String name : nodeNameList ) {
+                for( GraphNodeInfo info : nodeInfoList ) {
                     nodeList.add( new SelectionListItem()
-                                    .setName(name)
-                                    .setType(count++ < inNodes.length?SelectionListItem.IN_NODE:SelectionListItem.OUT_NODE)
+                                    .setName(info.getGraphNodeName())
+                                    .setType(info.getType())
                                 );
                 }
+                System.out.println("SelectionListItemNodeChildFactory : created "+nodeInfoList.size()+" nodes");
                 listToPopulate.addAll(nodeList);
+            } else {
+                System.out.println("SelectionListItemNodeChildFactory : couldn't create any nodes");
             }
         }
+        System.out.println("SelectionListItemNodeChildFactory : finished a pass");
         return true;
     }
     

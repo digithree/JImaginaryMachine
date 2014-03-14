@@ -9,8 +9,6 @@ package com.jimaginary.machine.midi.phrase;
 import com.jimaginary.machine.api.*;
 import com.digithree.codecs.midi.MidiCodec;
 import com.digithree.codecs.midi.MidiPlayer;
-import com.jimaginary.machine.math.Poisson;
-import com.jimaginary.machine.math.Uniform;
 import java.io.File;
 
 /**
@@ -21,16 +19,25 @@ public final class MidiPhraseOutputSetCollection extends SetCollection {
     MidiCodec midiCodec;
     MidiPlayer midiPlayer;
     int numPhrases, phraseLength;
-    
-    private static final String []nodeNameList = { "MidiNoteWriteNode", "MidiPhraseChooseModifyNode" };
 
-    public MidiPhraseOutputSetCollection( int _numPhrases, int _phraseLength ) {
+    public MidiPhraseOutputSetCollection() {
         super();
         name = "MidiPhraseOutputSetCollection";
-        numPhrases = _numPhrases;
-        phraseLength = _phraseLength;
+        numPhrases = MidiModalConstants.DEFAULT_NUM_OUPTUT_PHRASES;
+        phraseLength = MidiModalConstants.DEFAULT_PHRASE_LENGTH;
         setsFollowCurrentHead = false;
         init();
+    }
+    
+    // registration with system
+    @Override
+    public String getName() {
+        return "MidiPhraseOutputSetCollection";
+    }
+    
+    @Override
+    public String getGraphNodeResourceName() {
+        return "MidiPhraseGraphNodeResource";
     }
 
     @Override
@@ -49,18 +56,6 @@ public final class MidiPhraseOutputSetCollection extends SetCollection {
         midiCodec = new MidiCodec();
     }
     
-    // registration with system
-    public static String getName() {
-        return "MidiPhraseOutputSetCollection";
-    }
-    
-    public static String[] getInNodesNames() {
-        return null;
-    }
-    
-    public static String[] getOutNodesNames() {
-        return nodeNameList;
-    }
 
     @Override
     public void outputSet( int idx, String filename) {
@@ -117,132 +112,6 @@ public final class MidiPhraseOutputSetCollection extends SetCollection {
     public void display() {
         for( Set set : sets ) {
             midiCodec.displaySetAsString(set);
-        }
-    }
-
-    // --- graph building ---
-    @Override
-    public GraphNode generateWriteNode() {
-        return (GraphNode)new MidiNoteWriteNode();
-    }
-
-    // Modifiers
-    @Override
-    public GraphNode generateModifyNode() {
-        return (GraphNode)new MidiPhraseChooseModifyNode(numPhrases);
-    }
-    
-    @Override
-    public GraphNode[] generateAllNodes() {
-        GraphNode retNodes[] = new GraphNode[2];
-        retNodes[0] = (GraphNode)new MidiNoteWriteNode();
-        retNodes[1] = (GraphNode)new MidiPhraseChooseModifyNode(numPhrases);
-        return retNodes;
-    }
-    
-    @Override
-    public GraphNode getGraphNodeByName(String nodeName) {
-        if( nodeName.equals(nodeNameList[0]) ) {
-            return (GraphNode)new MidiNoteWriteNode();
-        } else if( nodeName.equals(nodeNameList[1]) ) {
-            return (GraphNode)new MidiPhraseChooseModifyNode(numPhrases);
-        }
-        return null;
-    }
-    
-    // --- Nodes
-    public class MidiNoteWriteNode extends GraphNode {
-        final String []PARAM_JUMP_NAMES = { "Next", "+2", "+3", "+4", "+5", "+6" };
-        //final float []PARAM_JUMP_PROBS = { 0.65f, 0.24f, 0.05f, 0.03f, 0.02f, 0.01f };
-        final float PARAM_JUMP_MEAN = 0.39f;
-        
-        private final int PARAM_JUMP = 0;
-
-        MidiNoteWriteNode() {
-            super("Midi Write",WRITE,1,1);
-            setAllowsSelfConnection(true);
-            setParameter(PARAM_JUMP, new Poisson(PARAM_JUMP_MEAN,PARAM_JUMP_NAMES.length-1) );
-        }
-
-        @Override
-        public void refreshDescription() {
-            setDescription("jump ["+PARAM_JUMP_NAMES[(int)getParameter(PARAM_JUMP).lastValue()]+"]");
-        }
-
-        // override
-        @Override
-        public GraphNode process( Graph.GraphPacket graphPacket ) {
-            // get offset
-            /*
-            boolean rnd = false;
-            int offset = 0;
-            if( parameters[PARAM_JUMP] == 0 ) {            // random
-                rnd = true;
-            } else {
-                // if not random, then get offset from last position
-                if( parameters[PARAM_JUMP] == 1 ) {     // next
-                    offset = 1;
-                } else if( parameters[PARAM_JUMP] == 2 ) {     // previous
-                    offset = -1;
-                } else if( parameters[PARAM_JUMP] >= 3 && parameters[PARAM_JUMP] <= 4) {     // +2, +3
-                    offset = (int)parameters[PARAM_JUMP] - 1;
-                } else if( parameters[PARAM_JUMP] >= 5 && parameters[PARAM_JUMP] <= 6) {     // -2, -3
-                    offset = -1 * ((int)parameters[PARAM_JUMP] - 3);
-                }
-            }
-            */
-            int offset = (int)getParameter(PARAM_JUMP).lastValue() + 1;
-
-            System.out.println( name+"\t\t\t - process: offset "+offset );
-
-            /*
-            if( !rnd ) {
-                graphPacket.phraseSet.writeHeadMoveByOffset(offset);
-            } else {
-                graphPacket.phraseSet.writeHeadMoveToRnd();
-            }
-            boolean writeSuccess = graphPacket.phraseSet.writeSet(graphPacket.tempSet);
-            */
-
-            boolean writeSuccess = graphPacket.outputSetCollection
-                    .writeToSet(false,offset,graphPacket.tempSet);
-
-            //graphPacket.displayVariables();
-
-            if( !writeSuccess ) { // Sequence is full
-                // FINISHED!
-                System.out.println( "-=-=-=-=-=-==== REACHED END OF PHRASE ====-=-=-=-=-=-");
-                return null;
-            }
-
-            return getNext(0);
-        }
-    }
-
-
-    public class MidiPhraseChooseModifyNode extends GraphNode {
-        private final int PARAM_PHRASE = 0;
-
-        MidiPhraseChooseModifyNode(int numPhrases) {
-            super("Midi Phrase",MODIFY,1,1);
-            setParameter(PARAM_PHRASE, new Uniform(numPhrases));
-        }
-
-        @Override
-        public void refreshDescription() {
-            setDescription("Phrase: ["+(int)(getParameter(PARAM_PHRASE).lastValue()+1)+"]");
-        }
-
-        @Override
-        public GraphNode process( Graph.GraphPacket graphPacket ) {
-            if( graphPacket.outputSetCollection instanceof MidiPhraseOutputSetCollection ) {
-                ((MidiPhraseOutputSetCollection)graphPacket.outputSetCollection)
-                        .chooseSet((int)getParameter(PARAM_PHRASE).lastValue());
-            }
-
-            System.out.println(name+"\t\t - choose phrase "+(int)(getParameter(PARAM_PHRASE).lastValue()+1));
-
-            return getNext(0);
         }
     }
 }

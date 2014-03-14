@@ -8,6 +8,7 @@ package com.jimaginary.machine.graph.viewer;
 import com.jimaginary.machine.api.Graph;
 import com.jimaginary.machine.api.GraphData;
 import com.jimaginary.machine.api.GraphNode;
+import com.jimaginary.machine.api.GraphNodeInfo;
 import com.jimaginary.machine.math.Matrix;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
@@ -16,13 +17,11 @@ import java.awt.event.KeyEvent;
 import java.beans.PropertyVetoException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.Set;
 import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.netbeans.api.visual.action.ActionFactory;
@@ -31,36 +30,26 @@ import org.netbeans.api.visual.action.ConnectorState;
 import org.netbeans.api.visual.action.PopupMenuProvider;
 import org.netbeans.api.visual.action.SelectProvider;
 import org.netbeans.api.visual.action.WidgetAction;
-import org.netbeans.api.visual.anchor.AnchorFactory;
-import org.netbeans.api.visual.anchor.AnchorShape;
-import org.netbeans.api.visual.graph.GraphScene;
-import org.netbeans.api.visual.model.ObjectState;
-import org.netbeans.api.visual.vmd.VMDConnectionWidget;
 import org.netbeans.api.visual.vmd.VMDGraphScene;
 import org.netbeans.api.visual.vmd.VMDNodeWidget;
 import org.netbeans.api.visual.vmd.VMDPinWidget;
-import org.netbeans.api.visual.widget.ConnectionWidget;
 import org.netbeans.api.visual.widget.EventProcessingType;
 import org.netbeans.api.visual.widget.LayerWidget;
 import org.netbeans.api.visual.widget.Scene;
 import org.netbeans.api.visual.widget.Widget;
-import org.netbeans.api.visual.widget.general.IconNodeWidget;
 import org.openide.DialogDisplayer;
 import org.openide.NotifyDescriptor;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.awt.StatusDisplayer;
-import org.openide.awt.StatusLineElementProvider;
 import org.openide.explorer.ExplorerManager;
 import org.openide.explorer.ExplorerUtils;
 import org.openide.nodes.AbstractNode;
 import org.openide.nodes.Children;
 import org.openide.nodes.Node;
-import org.openide.nodes.NodeOperation;
 import org.openide.nodes.PropertySupport;
 import org.openide.nodes.Sheet;
 import org.openide.util.Exceptions;
-import org.openide.util.Lookup;
 import org.openide.util.LookupEvent;
 import org.openide.util.LookupListener;
 import org.openide.windows.TopComponent;
@@ -94,10 +83,6 @@ public final class JImaginaryGraphTopComponent extends TopComponent
             implements LookupListener, ExplorerManager.Provider {
 
     private final transient ExplorerManager explorerManager = new ExplorerManager();
-    
-    private final boolean COLLAPSE_NODES_BY_DEFAULT = true;
-    
-    private String currentNodeName;
     
     //private VMDGraphScene scene;
     private VMDGraphScene scene;
@@ -309,9 +294,9 @@ public final class JImaginaryGraphTopComponent extends TopComponent
                     // get node
                     // TODO : is this too strongly coupled, should not need to
                     //          know how to make nodes
-                    int id = GraphData.getGraph().addNodeByName(GraphData.getNodeName());
-                    if( id != -1 ) {
-                        GraphNodeItem item = createWidgetAndNode(GraphData.getNodeName()+"-"+id,loc);
+                    GraphNodeInfo info = GraphData.getGraph().addNodeByName(GraphData.getNodeName());
+                    if( info != null ) {
+                        GraphNodeItem item = createWidgetAndNode(info.getName(),loc);
                         // debug test! set parameter
                         item.setParameter("Bernoulli:0.5");
                         // fires message to listening nodes of any changes

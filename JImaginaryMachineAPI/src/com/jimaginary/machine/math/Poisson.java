@@ -33,11 +33,6 @@ public class Poisson extends MathFunction {
     }
     
     @Override
-    public float evaluate(float x) {
-        return evaluate();
-    }
-    
-    @Override
     public float evaluate() {
         float k = 0.f;
         float p = 1.f;

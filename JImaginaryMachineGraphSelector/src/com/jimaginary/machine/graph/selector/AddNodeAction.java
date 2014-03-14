@@ -6,6 +6,8 @@
 package com.jimaginary.machine.graph.selector;
 
 import com.jimaginary.machine.api.GraphData;
+import com.jimaginary.machine.api.GraphNodeInfo;
+import com.jimaginary.machine.api.GraphNodeResourceService;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import javax.swing.JOptionPane;
@@ -50,8 +52,8 @@ public final class AddNodeAction implements ActionListener {
             // get node
             // TODO : is this too strongly coupled, should not need to
             //          know how to make nodes
-            int id = GraphData.getGraph().addNodeByName(GraphData.getNodeName());
-            if( id != -1 ) {
+            GraphNodeInfo info = GraphData.getGraph().addNodeByName(GraphData.getNodeName());
+            if( info != null ) {
                 GraphData.getGraph().finishChanges();
             } else {
                 JOptionPane.showMessageDialog(null, "Couldn't add node: "+GraphData.getNodeName());

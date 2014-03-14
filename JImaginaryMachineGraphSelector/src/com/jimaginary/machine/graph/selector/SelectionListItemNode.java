@@ -6,8 +6,9 @@
 
 package com.jimaginary.machine.graph.selector;
 
-import com.jimaginary.graph.module.reg.GraphFactory;
+import com.jimaginary.machine.services.GraphFactory;
 import com.jimaginary.machine.api.GraphData;
+import com.jimaginary.machine.api.GraphNode;
 import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.beans.PropertyChangeEvent;
@@ -60,13 +61,14 @@ public class SelectionListItemNode extends AbstractNode implements PropertyChang
     @Override
     public Image getIcon (int type) {
         if( item != null ) {
-            switch(item.getType()) {
-                case SelectionListItem.GRAPH:
-                    return ImageUtilities.loadImage ("resources/graphicon.png");
-                case SelectionListItem.IN_NODE:
+            if( item.getType() == SelectionListItem.GRAPH ) {
+                return ImageUtilities.loadImage ("resources/graphicon.png");
+            } else {
+                if( item.getType() == GraphNode.SAMPLE ) {
                     return ImageUtilities.loadImage ("resources/inArrow.png");
-                case SelectionListItem.OUT_NODE:
+                } else if( item.getType() == GraphNode.WRITE ) {
                     return ImageUtilities.loadImage ("resources/outArrow.png");
+                } // else don't set yet : TODO : get proper icons
             }
         }
         return ImageUtilities.loadImage ("resources/graphicon.png");
@@ -83,10 +85,7 @@ public class SelectionListItemNode extends AbstractNode implements PropertyChang
             switch(item.getType()) {
                 case SelectionListItem.GRAPH:
                     return new Action[] { new NewEmptyGraphAction(), new NewRandomGraphAction() };
-                case SelectionListItem.IN_NODE:
-                    return null;
-                case SelectionListItem.OUT_NODE:
-                    return null;
+                // other cases?
             }
         }
         return null;

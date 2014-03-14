@@ -28,11 +28,6 @@ public class Uniform extends MathFunction {
     }
 
     @Override
-    public float evaluate(float x) {
-        return evaluate();
-    }
-
-    @Override
     public float evaluate() {
         lastVal = (int)(Math.random()*paramVals[0]);
         return lastVal;

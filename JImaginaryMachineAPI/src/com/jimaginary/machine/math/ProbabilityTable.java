@@ -19,11 +19,6 @@ public class ProbabilityTable extends MathFunction {
     }
 
     @Override
-    public float evaluate(float x) {
-        return evaluate();
-    }
-
-    @Override
     public float evaluate() {
         float rnd = (float)Math.random();
         float sum = 0.f;

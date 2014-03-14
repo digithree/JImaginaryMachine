@@ -26,12 +26,8 @@ public class Bernoulli extends MathFunction {
     }
 
     @Override
-    public float evaluate(float x) {
-        return evaluate();
-    }
-
-    @Override
     public float evaluate() {
         return Math.random() < paramVals[0] ? 0.f : 1.f;
     }
+
 }

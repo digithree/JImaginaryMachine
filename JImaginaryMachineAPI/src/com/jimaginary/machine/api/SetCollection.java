@@ -12,7 +12,7 @@ import java.util.ArrayList;
  *
  * @author simonkenny
  */
-public class SetCollection {
+public abstract class SetCollection {
     public final static int PLAY = 0;
     public final static int PLAY_LOOPING = 1;
     public final static int PAUSE = 2;
@@ -50,17 +50,8 @@ public class SetCollection {
     }
     
     // registration with system, use string literals
-    public static String getName() {
-        return "[SetCollection]";
-    }
-    
-    public static String[] getInNodesNames() {
-        return null;
-    }
-    
-    public static String[] getOutNodesNames() {
-        return null;
-    }
+    public abstract String getName();
+    public abstract String getGraphNodeResourceName();
 
     // --- SET ACCESS ---
     // - IO
@@ -241,29 +232,4 @@ public class SetCollection {
         rangeLength = len;
     }
 
-    // --- graph building ---
-
-    public GraphNode generateSampleNode() {
-        return null;
-    }
-
-    public GraphNode generateWriteNode() {
-        return null;
-    }
-
-    public GraphNode[] generateManditoryFirstModifyNodes() {
-        return null;
-    }
-
-    public GraphNode generateModifyNode() {
-        return null;
-    }
-    
-    public GraphNode[] generateAllNodes() {
-        return null;
-    }
-    
-    public GraphNode getGraphNodeByName(String nodeName) {
-        return null;
-    }
 }

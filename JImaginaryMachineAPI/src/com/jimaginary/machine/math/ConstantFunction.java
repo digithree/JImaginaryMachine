@@ -21,11 +21,6 @@ public class ConstantFunction extends MathFunction {
         setParamName(0, "Value");   // no upper/lower bound
         setParameter(0, val);
     }
-
-    @Override
-    public float evaluate(float x) {
-        return paramVals[0];
-    }
     
     @Override
     public float evaluate() {
