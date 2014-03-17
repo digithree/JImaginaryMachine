@@ -37,13 +37,13 @@ public abstract class GraphNode implements Comparable<GraphNode> {
     
     private final GraphNodeInfo info;
 
-    public GraphNode( String name, int type, int _numParameters, int maxChildren ) {
+    public GraphNode( String name, int type, int numParameters, int maxChildren ) {
         info = new GraphNodeInfo(ID_COUNT++,name,type,numParameters,maxChildren);
         
         previous = new ArrayList<GraphNode>();
         maxNextConnections = maxChildren;
         next = new GraphNode[maxNextConnections];
-        numParameters = _numParameters;
+        this.numParameters = numParameters;
         parameters = new MathFunction[numParameters];
         acceptsConnection = true;
         allowsSelfConnection = false;
@@ -101,12 +101,21 @@ public abstract class GraphNode implements Comparable<GraphNode> {
     }
     
     protected boolean nextContains(GraphNode node) {
-        for( int i = 0 ; i < next.length ; i++ ) {
-            if( next[i] == node ) {
+        for( GraphNode _node : next ) {
+            if( _node == node ) {
                 return true;
             }
         }
         return false;
+    }
+    
+    protected int nextContainsAt(GraphNode node) {
+        for( int i = 0 ; i < next.length ; i++ ) {
+            if( next[i] == node ) {
+                return i;
+            }
+        }
+        return -1;
     }
     
     // this method will only add next if there is a free space, unlike the

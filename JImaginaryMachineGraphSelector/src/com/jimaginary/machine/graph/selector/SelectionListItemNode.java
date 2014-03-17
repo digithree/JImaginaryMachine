@@ -6,7 +6,7 @@
 
 package com.jimaginary.machine.graph.selector;
 
-import com.jimaginary.machine.services.GraphFactory;
+import com.jimaginary.machine.api.Graph;
 import com.jimaginary.machine.api.GraphData;
 import com.jimaginary.machine.api.GraphNode;
 import java.awt.Image;
@@ -15,14 +15,15 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
-import javax.swing.JOptionPane;
-import org.netbeans.api.visual.action.ConnectProvider;
+import org.netbeans.api.progress.ProgressHandle;
+import org.netbeans.api.progress.ProgressHandleFactory;
 import org.openide.ErrorManager;
 import org.openide.awt.StatusDisplayer;
 import org.openide.nodes.AbstractNode;
 import org.openide.nodes.Children;
 import org.openide.nodes.PropertySupport;
 import org.openide.nodes.Sheet;
+import org.openide.util.Exceptions;
 import org.openide.util.ImageUtilities;
 import org.openide.util.lookup.Lookups;
 
@@ -107,10 +108,20 @@ public class SelectionListItemNode extends AbstractNode implements PropertyChang
         @Override
         public void actionPerformed(ActionEvent e) {
             SelectionListItem obj = getLookup().lookup(SelectionListItem.class);
-            GraphData.setGraph(GraphFactory.createGraph(obj.getType()));
-            GraphFactory.finishGraph(GraphData.getGraph());
-            //JOptionPane.showMessageDialog(null, "Created new empty " + obj);
-            StatusDisplayer.getDefault().setStatusText("Created new empty " + obj);
+            //ProgressHandle progressHandle = ProgressHandleFactory.createHandle("Creating graph");
+            //progressHandle.switchToIndeterminate();
+            //progressHandle.start();
+            boolean result = GraphData.setGraph(new Graph(obj.getResPackName()));
+            //progressHandle.finish();
+            if( result ) {
+                if( GraphData.getGraph().isValid() ) {
+                    GraphData.getGraph().finishChanges();
+                    //JOptionPane.showMessageDialog(null, "Created new empty " + obj);
+                    StatusDisplayer.getDefault().setStatusText("Created new empty " + obj);
+                    return;
+                }
+            } // else if failed
+            StatusDisplayer.getDefault().setStatusText("Couldn't create new empty " + obj);
         }
     }
     
@@ -121,11 +132,36 @@ public class SelectionListItemNode extends AbstractNode implements PropertyChang
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            SelectionListItem obj = getLookup().lookup(SelectionListItem.class);
-            GraphData.setGraph(GraphFactory.createGraph(obj.getType()));
-            GraphFactory.randomiseGraph(GraphData.getGraph());
-            //JOptionPane.showMessageDialog(null, "Created new random " + obj);
-            StatusDisplayer.getDefault().setStatusText("Created new random " + obj);
+            final SelectionListItem obj = getLookup().lookup(SelectionListItem.class);
+            final ProgressHandle progressHandle = ProgressHandleFactory.createHandle("Creating graph");
+            /*
+            Thread progressThread = new Thread( new Runnable() 
+            {
+                public void run() 
+                {
+                    progressHandle.switchToIndeterminate();
+                    progressHandle.start();
+                }
+            });//.start();
+            progressThread.start();
+                    */
+            boolean result = GraphData.setGraph(new Graph(obj.getResPackName()));
+            /*
+            try {
+                progressThread.join();
+            } catch (InterruptedException ex) {
+                Exceptions.printStackTrace(ex);
+            }
+            progressHandle.finish();
+                    */
+            if( result ) {
+                if( GraphData.getGraph().isValid() ) {
+                    GraphData.getGraph().generateRandom();
+                    //JOptionPane.showMessageDialog(null, "Created new random " + obj);
+                    StatusDisplayer.getDefault().setStatusText("Created new random " + obj);
+                }
+            }
+            StatusDisplayer.getDefault().setStatusText("Couldn't create new random " + obj);
         }
     }
     

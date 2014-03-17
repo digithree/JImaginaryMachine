@@ -8,32 +8,35 @@ package com.jimaginary.machine.generalgraph;
 
 import com.jimaginary.machine.api.GraphNode;
 import com.jimaginary.machine.api.GraphNodeInfo;
-import com.jimaginary.machine.api.GraphNodeResource;
+import com.jimaginary.machine.api.GraphResource;
+import com.jimaginary.machine.api.SetCollection;
 import org.openide.util.lookup.ServiceProvider;
 
 /**
  *
  * @author simonkenny
  */
-@ServiceProvider(service=GraphNodeResource.class)
-public class GeneralGraphNodeResource implements GraphNodeResource {
+@ServiceProvider(service=GraphResource.class)
+public class GeneralGraphNodeResource implements GraphResource {
     
-    public String[] names = {
+    private final int NUM_NODES = 2;
+    
+    private final String[] names = {
         "StartNode",
         "Choice2Node"
     };
     
-    public int[] types = {
+    private final int[] types = {
         GraphNode.START,
         GraphNode.CHOICE
     };
     
-    public int[] numParams = {
+    private final int[] numParams = {
         0,
         1
     };
     
-    public int[] numConns = {
+    private final int[] numConns = {
         1,
         2
     };
@@ -45,7 +48,7 @@ public class GeneralGraphNodeResource implements GraphNodeResource {
 
     @Override
     public GraphNode[] getAllNodes() {
-        GraphNode retNodes[] = new GraphNode[7];
+        GraphNode retNodes[] = new GraphNode[NUM_NODES];
         retNodes[0] = (GraphNode)new StartNode();
         retNodes[1] = (GraphNode)new Choice2Node();
         return retNodes;
@@ -53,8 +56,8 @@ public class GeneralGraphNodeResource implements GraphNodeResource {
 
     @Override
     public GraphNodeInfo[] getAllNodeInfo() {
-        GraphNodeInfo retInfos[] = new GraphNodeInfo[2];
-        for( int i = 0 ; i < 2 ; i++ ) {
+        GraphNodeInfo retInfos[] = new GraphNodeInfo[NUM_NODES];
+        for( int i = 0 ; i < NUM_NODES ; i++ ) {
             retInfos[i] = new GraphNodeInfo(-1,names[i],types[i],numParams[i],numConns[i]);
         }
         return retInfos;
@@ -73,6 +76,21 @@ public class GeneralGraphNodeResource implements GraphNodeResource {
     @Override
     public String getDescription() {
         return "[no graph, general graph elements]";
+    }
+
+    @Override
+    public SetCollection[] getIOSetCollections() {
+        return null;
+    }
+
+    @Override
+    public SetCollection getInputSetCollection() {
+        return null;
+    }
+
+    @Override
+    public SetCollection getOutputSetCollection() {
+        return null;
     }
     
 }

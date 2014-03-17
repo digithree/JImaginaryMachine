@@ -8,16 +8,20 @@ package com.jimaginary.machine.midi.phrase;
 
 import com.jimaginary.machine.api.GraphNode;
 import com.jimaginary.machine.api.GraphNodeInfo;
-import com.jimaginary.machine.api.GraphNodeResource;
+import com.jimaginary.machine.api.GraphResource;
+import com.jimaginary.machine.api.SetCollection;
 import org.openide.util.lookup.ServiceProvider;
 
 /**
  *
  * @author simonkenny
  */
-@ServiceProvider(service=GraphNodeResource.class)
-public class MidiPhraseGraphNodeResource implements GraphNodeResource {
-    public String[] names = {
+@ServiceProvider(service=GraphResource.class)
+public class MidiPhraseGraphNodeResource implements GraphResource {
+    
+    private final int NUM_NODES = 7;
+    
+    private final String[] names = {
         "MidiKeyModifyNode",
         "MidiKeyTypeModifyNode",
         "MidiModeModifyNode",
@@ -27,7 +31,7 @@ public class MidiPhraseGraphNodeResource implements GraphNodeResource {
         "MidiRangeModifyNode"
     };
     
-    public int[] types = {
+    private final int[] types = {
         GraphNode.MODIFY,
         GraphNode.MODIFY,
         GraphNode.MODIFY,
@@ -37,7 +41,7 @@ public class MidiPhraseGraphNodeResource implements GraphNodeResource {
         GraphNode.MODIFY
     };
     
-    public int[] numParams = {
+    private final int[] numParams = {
         1,
         1,
         1,
@@ -47,7 +51,7 @@ public class MidiPhraseGraphNodeResource implements GraphNodeResource {
         3
     };
     
-    public int[] numConns = {
+    private final int[] numConns = {
         1,
         1,
         1,
@@ -59,7 +63,7 @@ public class MidiPhraseGraphNodeResource implements GraphNodeResource {
     
     @Override
     public GraphNode[] getAllNodes() {
-        GraphNode retNodes[] = new GraphNode[7];
+        GraphNode retNodes[] = new GraphNode[NUM_NODES];
         retNodes[0] = (GraphNode)new MidiNoteSampleNode();
         retNodes[1] = (GraphNode)new MidiKeyTypeModifyNode();
         retNodes[2] = (GraphNode)new MidiKeyModifyNode();
@@ -72,8 +76,8 @@ public class MidiPhraseGraphNodeResource implements GraphNodeResource {
 
     @Override
     public GraphNodeInfo[] getAllNodeInfo() {
-        GraphNodeInfo retInfos[] = new GraphNodeInfo[7];
-        for( int i = 0 ; i < 7 ; i++ ) {
+        GraphNodeInfo retInfos[] = new GraphNodeInfo[NUM_NODES];
+        for( int i = 0 ; i < NUM_NODES ; i++ ) {
             retInfos[i] = new GraphNodeInfo(-1,names[i],types[i],numParams[i],numConns[i]);
         }
         return retInfos;
@@ -106,5 +110,23 @@ public class MidiPhraseGraphNodeResource implements GraphNodeResource {
     @Override
     public String getDescription() {
         return "Enables the composition of diatonic phrases in either tonal, modal or atonal styles which are encoded in MIDI";
+    }
+
+    @Override
+    public SetCollection[] getIOSetCollections() {
+        SetCollection ioSets[] = new SetCollection[2];
+        ioSets[0] = new MidiPhraseInputSetCollection();
+        ioSets[1] = new MidiPhraseOutputSetCollection();
+        return ioSets;
+    }
+
+    @Override
+    public SetCollection getInputSetCollection() {
+        return new MidiPhraseInputSetCollection();
+    }
+
+    @Override
+    public SetCollection getOutputSetCollection() {
+        return new MidiPhraseOutputSetCollection();
     }
 }

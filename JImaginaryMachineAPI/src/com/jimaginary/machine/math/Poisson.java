@@ -6,6 +6,8 @@
 
 package com.jimaginary.machine.math;
 
+import com.jimaginary.machine.api.Utils;
+
 /**
  *
  * @author simonkenny
@@ -42,5 +44,10 @@ public class Poisson extends MathFunction {
         } while(p > (float)Math.exp(-paramVals[0]));
         lastVal = (int)((k-1) <= paramVals[1] ? (k-1) : paramVals[1]);
         return lastVal;
+    }
+
+    @Override
+    public float probMassOrDensity(float x) {
+        return (float)((Math.pow(paramVals[0], x) / Utils.factorial((int)x)) * Math.exp(-paramVals[0]));
     }
 }

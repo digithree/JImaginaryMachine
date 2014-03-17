@@ -14,11 +14,19 @@ import java.text.ParseException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+/*
+TODO : the upper limit set on the number of phrases here is the default number.
+    This is a terrible solution to not knowing how many phrases there are.
+    Perhaps use a look up to find this information on the fly?
+*/
+
 public class MidiPhraseChooseModifyNode extends GraphNode {
     private final int PARAM_PHRASE = 0;
 
     MidiPhraseChooseModifyNode() {
-        super("Midi Phrase",MODIFY,1,1);
+        super("MidiPhraseChooseModifyNode",MODIFY,1,1);
+        getInfo().setParameterName(PARAM_PHRASE, "Phrase");
+        getInfo().setParameterNumIdx(PARAM_PHRASE, MidiModalConstants.DEFAULT_NUM_OUPTUT_PHRASES);
         setParameter(PARAM_PHRASE, new Uniform(MidiModalConstants.DEFAULT_NUM_OUPTUT_PHRASES)); //default
     }
 

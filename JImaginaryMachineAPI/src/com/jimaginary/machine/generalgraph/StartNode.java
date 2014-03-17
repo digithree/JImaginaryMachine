@@ -16,7 +16,7 @@ import static com.jimaginary.machine.api.GraphNode.START;
  */
 public class StartNode extends GraphNode {
     public StartNode() {
-        super("Start",START,0,1);
+        super("StartNode",START,0,1);
         setAcceptsConnection(false);
         setDescription( "Process starts" );
     }

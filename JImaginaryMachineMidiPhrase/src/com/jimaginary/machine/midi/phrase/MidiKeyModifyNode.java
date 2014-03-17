@@ -18,7 +18,10 @@ public class MidiKeyModifyNode extends GraphNode {
     private final int PARAM_KEY = 0;    
 
     MidiKeyModifyNode() {
-        super("Midi Key",MODIFY,1,1);
+        super("MidiKeyModifyNode",MODIFY,1,1);
+        getInfo().setParameterName(PARAM_KEY, "Key");
+        getInfo().setParameterNumIdx(PARAM_KEY, MidiModalConstants.NUM_KEYS);
+        getInfo().setParameterIdxNames(PARAM_KEY, MidiModalConstants.KEY_NAMES);
         setParameter(PARAM_KEY, new Uniform(MidiModalConstants.NUM_KEYS));
     }
 

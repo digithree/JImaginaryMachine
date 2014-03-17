@@ -32,4 +32,9 @@ public class Uniform extends MathFunction {
         lastVal = (int)(Math.random()*paramVals[0]);
         return lastVal;
     }
+
+    @Override
+    public float probMassOrDensity(float x) {
+        return paramVals[0];
+    }
 }

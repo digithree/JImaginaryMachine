@@ -20,10 +20,14 @@ public class MidiModeModifyNode extends GraphNode {
 
 
     MidiModeModifyNode() {
-        super("Midi Mode",MODIFY,1,1);
+        super("MidiModeModifyNode",MODIFY,1,1);
+        getInfo().setParameterName(PARAM_MODE, "Mode");
+        getInfo().setParameterNumIdx(PARAM_MODE, MidiModalConstants.MODE_NAMES.length);
+        getInfo().setParameterIdxNames(PARAM_MODE, MidiModalConstants.MODE_NAMES);
         setParameter(PARAM_MODE, new ProbabilityTable(PARAM_MODE_PROBS.length));
         getParameter(PARAM_MODE).setParameters(0,PARAM_MODE_PROBS);
         getParameter(PARAM_MODE).setParamNames(0,MidiModalConstants.MODE_NAMES);
+        getInfo().setParameter(PARAM_MODE, getParameter(PARAM_MODE).toString()); //manually set info
     }
 
         @Override

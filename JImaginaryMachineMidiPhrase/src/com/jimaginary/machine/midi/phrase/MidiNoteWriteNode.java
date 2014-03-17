@@ -15,14 +15,17 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class MidiNoteWriteNode extends GraphNode {
-    final String []PARAM_JUMP_NAMES = { "Next", "+2", "+3", "+4", "+5", "+6" };
+    final String []PARAM_JUMP_NAMES = { "None", "Next", "+2", "+3", "+4", "+5", "+6" };
     final float PARAM_JUMP_MEAN = 0.39f;
 
     private final int PARAM_JUMP = 0;
 
     MidiNoteWriteNode() {
-        super("Midi Write",WRITE,1,1);
+        super("MidiNoteWriteNode",WRITE,1,1);
         setAllowsSelfConnection(true);
+        getInfo().setParameterName(PARAM_JUMP, "Jump amount");
+        getInfo().setParameterNumIdx(PARAM_JUMP, PARAM_JUMP_NAMES.length);
+        getInfo().setParameterIdxNames(PARAM_JUMP, PARAM_JUMP_NAMES);
         setParameter(PARAM_JUMP, new Poisson(PARAM_JUMP_MEAN,PARAM_JUMP_NAMES.length-1) );
     }
 
@@ -41,7 +44,7 @@ public class MidiNoteWriteNode extends GraphNode {
             Logger.getLogger(MidiKeyModifyNode.class.getName()).log(Level.SEVERE, null, ex);
         }
         // process
-        int offset = (int)getParameter(PARAM_JUMP).lastValue() + 1;
+        int offset = (int)getParameter(PARAM_JUMP).lastValue();
 
         System.out.println( getName()+"\t\t\t - process: offset "+offset );
 

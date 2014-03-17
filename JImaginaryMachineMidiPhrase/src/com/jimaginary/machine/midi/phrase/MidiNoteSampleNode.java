@@ -30,8 +30,13 @@ public class MidiNoteSampleNode extends GraphNode {
    private final int PARAM_SIZE = 1;
 
    MidiNoteSampleNode() {
-       super("Midi Note Sample",SAMPLE,2,1);
+       super("MidiNoteSampleNode",SAMPLE,2,1);
+       getInfo().setParameterName(PARAM_JUMP, "Jump amount");
+       getInfo().setParameterNumIdx(PARAM_JUMP, PARAM_JUMP_LIST.length);
+       getInfo().setParameterIdxNames(PARAM_JUMP, PARAM_JUMP_LIST);
        setParameter(PARAM_JUMP, new Poisson(PARAM_JUMP_MEAN,PARAM_JUMP_LIST.length-1) );
+       getInfo().setParameterName(PARAM_SIZE, "Sample size");
+       getInfo().setParameterNumIdx(PARAM_SIZE, 1);
        setParameter(PARAM_SIZE, new ConstantFunction(1.f) );
    }
 

@@ -31,4 +31,12 @@ public class ConstantFunction extends MathFunction {
     public float lastValue() {
         return paramVals[0];
     }
+
+    @Override
+    public float probMassOrDensity(float x) {
+        if( x == paramVals[0] ) {
+            return 1.f;
+        }
+        return 0.f;
+    }
 }

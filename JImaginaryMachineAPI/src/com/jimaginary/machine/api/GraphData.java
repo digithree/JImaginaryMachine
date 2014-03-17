@@ -21,7 +21,7 @@ public class GraphData {
     public static String currentNodeName;
     public static String lastNodeName;
     
-    public static void setGraph(Graph _graph) {
+    public static boolean setGraph(Graph _graph) {
         System.out.println("GraphData:setGraph");
         if( graph != null ) {
             graph.deleteObservers();
@@ -32,22 +32,28 @@ public class GraphData {
                 System.out.println("added observer to graph");
                 graph.addObserver(ob);
             }
+            return true;
         }
+        return false;
     }
     
     public static Graph getGraph() {
         return graph;
     }
     
-    public static void addObserver(Observer ob) {
+    public static boolean addObserver(Observer ob) {
         observers.add(ob);
         if( graph != null ) {
             graph.addObserver(ob);
+            return true;
         }
+        return false;
     }
     
     public static boolean removeObserver(Observer ob) {
-        graph.deleteObserver(ob);
+        if( graph != null ) {
+            graph.deleteObserver(ob);
+        }
         return observers.remove(ob);
     }
     

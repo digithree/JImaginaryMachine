@@ -7,7 +7,7 @@ package com.jimaginary.machine.graph.selector;
 
 import com.jimaginary.machine.api.GraphData;
 import com.jimaginary.machine.api.GraphNodeInfo;
-import com.jimaginary.machine.api.GraphNodeResourceService;
+import com.jimaginary.machine.api.GraphResourceService;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import javax.swing.JOptionPane;

@@ -7,8 +7,8 @@
 package com.jimaginary.machine.api;
 
 import com.jimaginary.machine.generalgraph.StartNode;
-import com.jimaginary.machine.math.Bernoulli;
 import com.jimaginary.machine.math.Matrix;
+import com.jimaginary.machine.settings.GraphSettings;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -39,8 +39,6 @@ public class Graph extends Observable {
                                                     0.0, 0.45, 0.0, 0.35, 0.2
                                                         };
     
-    private final static String []nodeNameList = { "StartNode", "Choice2Node" };
-    
     GraphNode headNode;
     Matrix adjacencyMatrix;
     ArrayList<GraphNode> allNodes;
@@ -56,16 +54,28 @@ public class Graph extends Observable {
     // process
     GraphPacket graphPacket, lastGraphPacket;
     
+    boolean valid;
+    
 
-    public Graph( SetCollection _inputSetCollection, SetCollection _outputSetCollection ) {
-        inputSetCollection = _inputSetCollection;
-        outputSetCollection = _outputSetCollection;
-        graphNodeResourceName = inputSetCollection.getGraphNodeResourceName();
+    public Graph( String graphNodeResourceName ) {
+        this.graphNodeResourceName = graphNodeResourceName;
+        System.out.println("Constructing Graph, resPackName: "+graphNodeResourceName);
+        SetCollection ioSets[] = GraphResourceService.getInstance().getIOSetCollections(graphNodeResourceName);
+        if( ioSets != null ) {
+            inputSetCollection = ioSets[0];
+            outputSetCollection = ioSets[1];
+            valid = true;
+        } else {
+            inputSetCollection = null;
+            outputSetCollection = null;
+            valid = true;
+        }
+        
         allNodes = new ArrayList<GraphNode>();
         shakeOut = false;
         transitionsForBuilding = new Matrix(NUM_NODES,NUM_NODES);
         transitionsForBuilding.set( MARKOV_CHAIN_NODE_SELECTION_PROBS );
-        graphPacket = new GraphPacket(inputSetCollection,outputSetCollection);
+        //graphPacket = new GraphPacket(inputSetCollection,outputSetCollection);
         lastGraphPacket = null; // why use this?
         // add StartNode to head
         headNode = (GraphNode)new StartNode();
@@ -74,12 +84,8 @@ public class Graph extends Observable {
         setChanged();
     }
     
-    public SetCollection getInputSetCollection() {
-        return inputSetCollection;
-    }
-    
-    public SetCollection getOutputSetCollection() {
-        return outputSetCollection;
+    public boolean isValid() {
+        return valid;
     }
     
     public ArrayList<GraphNode> getAllNodes() {
@@ -97,7 +103,7 @@ public class Graph extends Observable {
 
     private void addManditoryNodes() {
         System.out.println("Graph : addManditoryNodes");
-        List<GraphNode> manditoryNodes = GraphNodeResourceService.getInstance().getManditoryGraphNodes(graphNodeResourceName);
+        List<GraphNode> manditoryNodes = GraphResourceService.getInstance().getManditoryGraphNodes(graphNodeResourceName,true);
         for( GraphNode node : manditoryNodes ) {
             allNodes.add(node);
         }
@@ -119,8 +125,11 @@ public class Graph extends Observable {
         setChanged();
     }
     
+    // possible problem here, creaeGraphNodeByName gets from all nodes, which
+    // will mean you can add nodes from an incompatable set to this graph
+    //   change createGraphNodeByName to take resPackName ?
     public GraphNodeInfo addNodeByName( String nodeName ) {
-        GraphNode node = GraphNodeResourceService.getInstance().createGraphNodeByName(nodeName);
+        GraphNode node = GraphResourceService.getInstance().createGraphNodeByName(nodeName);
         if( node == null ) {
             return null;
         }
@@ -170,9 +179,8 @@ public class Graph extends Observable {
         adjacencyMatrix = new Matrix(GraphNode.ID_COUNT,GraphNode.ID_COUNT);
         for( int i = 0 ; i < GraphNode.ID_COUNT ; i++ ) {
             for( int j = 0 ; j < GraphNode.ID_COUNT ; j++ ) {
-                if( allNodes.get(i).nextContains(allNodes.get(j)) ) {
-                    adjacencyMatrix.set(i, j, 1);
-                }
+                int idx = allNodes.get(i).nextContainsAt(allNodes.get(j));
+                adjacencyMatrix.set(i, j, idx+1);
             }
         }
         // debug
@@ -190,6 +198,9 @@ public class Graph extends Observable {
 
     
     public void process() {
+        if( !valid ) {
+            return;
+        }
         lastGraphPacket = graphPacket;
         outputSetCollection.clearSetsAndReinitialise();
         graphPacket = new GraphPacket(inputSetCollection,outputSetCollection);
@@ -205,7 +216,11 @@ public class Graph extends Observable {
     }
 
     // ------------------------------------------------------
-    public boolean generateRandom( int minNodes, int maxNodes ) {
+    public boolean generateRandom() {
+        // get settings
+        int minNodes = GraphSettings.getMinNumGraphNodes();
+        int maxNodes = GraphSettings.getMaxNumGraphNodes();
+        
         InputOutput io = IOProvider.getDefault().getIO ("Graph builder", true);
         // choose number of nodes
         int numNodes = minNodes + (int)((float)(maxNodes-minNodes)*Math.random());
@@ -213,9 +228,11 @@ public class Graph extends Observable {
         // create nodes
         for( int i = 0 ; i < numNodes ; i++ ) {
             int selectedNode = Utils.getIdxFromProbTable(STANDARD_NODE_SELECTION_PROBS);
+            System.out.println("\ncreating node "+i+" of "+numNodes);
             GraphNode node = null;
             int type = (selectedNode+1);
-            List<GraphNodeInfo> infos = GraphNodeResourceService.getInstance().getAllGraphNodesInfo(graphNodeResourceName);
+            System.out.println("Looking for type "+type);
+            List<GraphNodeInfo> infos = GraphResourceService.getInstance().getAllGraphNodesInfo(graphNodeResourceName,true);
             List<GraphNodeInfo> rightTypeInfos = new ArrayList<GraphNodeInfo>();
             for( GraphNodeInfo info : infos ) {
                 if( info != null ) {
@@ -224,17 +241,21 @@ public class Graph extends Observable {
                     }
                 }
             }
+            System.out.println(rightTypeInfos.size()+" of right type");
             if( !rightTypeInfos.isEmpty() ) {
                 int idx = Utils.getIdxFromProbTable(Utils.createUniformProbTable(rightTypeInfos.size()));
-                node = GraphNodeResourceService.getInstance().createGraphNodeByName(
+                System.out.println("choosing node "+rightTypeInfos.get(idx).getGraphNodeName());
+                node = GraphResourceService.getInstance().createGraphNodeByName(
                         rightTypeInfos.get(idx).getGraphNodeName());
             }
             if( node != null ) {
                 io.getOut().println( "created node: "+node.getName());
+                System.out.println("created node: "+node.getName());
                 node.randomiseParameters();
                 addNode(node);
             } else {
                 io.getOut().println("NULL node");
+                System.out.println("NULL node");
                 i--;
             }
         }

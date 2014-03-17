@@ -23,7 +23,10 @@ import java.util.logging.Logger;
         private final float mean = 1.65f;
 
         MidiKeyTypeModifyNode() {
-            super("Midi Key Type",MODIFY,1,1);
+            super("MidiKeyTypeModifyNode",MODIFY,1,1);
+            getInfo().setParameterName(PARAM_KEY_TYPE, "Key type");
+            getInfo().setParameterNumIdx(PARAM_KEY_TYPE, PARAM_KEY_TYPE_NAME.length);
+            getInfo().setParameterIdxNames(PARAM_KEY_TYPE, PARAM_KEY_TYPE_NAME);
             setParameter(PARAM_KEY_TYPE, new Poisson(mean,PARAM_KEY_TYPE_NAME.length-1) );
         }
 

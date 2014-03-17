@@ -7,10 +7,8 @@
 package com.jimaginary.machine.graph.selector;
 
 import com.jimaginary.machine.api.GraphNodeInfo;
-import com.jimaginary.machine.api.GraphNodeResourceService;
-import com.jimaginary.machine.services.GraphFactory;
+import com.jimaginary.machine.api.GraphResourceService;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Node;
@@ -39,9 +37,9 @@ public class SelectionListItemNodeChildFactory extends ChildFactory<SelectionLis
             System.out.println("SelectionListItemNodeChildFactory : createKeys - creating top level");
             // this is root node, create package type list
             List<SelectionListItem> items = new ArrayList<SelectionListItem>();
-            List<String> graphNames = GraphNodeResourceService.getInstance().getAllGraphNodeResPackNames();
-            List<String> graphFriendlyNames = GraphNodeResourceService.getInstance().getAllGraphFriendlyNames();
-            List<String> graphDescriptions = GraphNodeResourceService.getInstance().getAllGraphDescriptions();
+            List<String> graphNames = GraphResourceService.getInstance().getAllGraphNodeResPackNames();
+            List<String> graphFriendlyNames = GraphResourceService.getInstance().getAllGraphFriendlyNames();
+            List<String> graphDescriptions = GraphResourceService.getInstance().getAllGraphDescriptions();
             for( int i = 0 ; i < graphNames.size() ; i++ ) {
                 items.add( new SelectionListItem()
                         .setName(graphFriendlyNames.get(i))
@@ -49,12 +47,13 @@ public class SelectionListItemNodeChildFactory extends ChildFactory<SelectionLis
                         .setType(SelectionListItem.GRAPH)     // root node type
                         .setDescription(graphDescriptions.get(i))
                 );
+                System.out.println("*** resPackName: "+graphNames.get(i));
             }
             System.out.println("SelectionListItemNodeChildFactory : createKeys - created "+graphNames.size() + " graphs");
             listToPopulate.addAll(items);
         } else {
             System.out.println("SelectionListItemNodeChildFactory : creating sub level");
-            List<GraphNodeInfo> nodeInfoList = GraphNodeResourceService.getInstance().getAllGraphNodesInfo(item.getResPackName());
+            List<GraphNodeInfo> nodeInfoList = GraphResourceService.getInstance().getAllGraphNodesInfo(item.getResPackName(),false);
             if( !nodeInfoList.isEmpty() ) {
                 List<SelectionListItem> nodeList = new ArrayList<SelectionListItem>();
                 int count = 0;

@@ -30,4 +30,14 @@ public class Bernoulli extends MathFunction {
         return Math.random() < paramVals[0] ? 0.f : 1.f;
     }
 
+    @Override
+    public float probMassOrDensity(float x) {
+        if( (int)x == 0 ) {
+            return 1.f - paramVals[0];
+        } else if( (int)x == 1 ) {
+            return paramVals[0];
+        }
+        return 0;
+    }
+
 }

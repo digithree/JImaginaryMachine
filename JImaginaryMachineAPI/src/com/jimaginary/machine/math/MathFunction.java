@@ -35,6 +35,10 @@ public abstract class MathFunction {
         firstEvaluation = false;
     }
     
+    public int getNumParameters() {
+        return paramVals.length;
+    }
+    
     public String getName() {
         return name;
     }
@@ -47,7 +51,7 @@ public abstract class MathFunction {
         return alwaysRandomise;
     }
     
-    protected boolean setParameter(int idx, float val) {
+    public boolean setParameter(int idx, float val) {
         if( paramVals != null ) {
             if( idx >= 0 && idx < paramVals.length ) {
                 paramVals[idx] = val;
@@ -60,9 +64,7 @@ public abstract class MathFunction {
     public boolean setParameters(int offset, float []vals) {
         if( paramVals != null ) {
             if( offset >= 0 && (offset+vals.length) <= paramVals.length ) {
-                for( int i = 0 ; i < vals.length ; i++ ) {
-                    paramVals[offset+i] = vals[i];
-                }
+                System.arraycopy(vals, 0, paramVals, offset, vals.length);
                 return true;
             }
         }
@@ -161,7 +163,7 @@ public abstract class MathFunction {
         return false;
     }
     
-    protected String getParamName(int idx) {
+    public String getParamName(int idx) {
         if( paramNames != null ) {
             if( idx >= 0 && idx < paramNames.length ) {
                 return paramNames[idx];
@@ -171,6 +173,7 @@ public abstract class MathFunction {
     }
     
     abstract public float evaluate();
+    abstract public float probMassOrDensity(float x);
     
     public float lastValue() {
         if( !firstEvaluation ) {

@@ -7,7 +7,7 @@
             <suite-component/>
             <module-dependencies>
                 <dependency>
-                    <code-name-base>com.jimaginary.graph.module.ref</code-name-base>
+                    <code-name-base>com.jimaginary.chart</code-name-base>
                     <build-prerequisite/>
                     <compile-dependency/>
                     <run-dependency>

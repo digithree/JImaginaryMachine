@@ -22,8 +22,11 @@ public class Choice2Node extends GraphNode {
     private final float CHOICE_PROB = 0.5f;
 
     public Choice2Node() {
-        super("2 Choice",CHOICE,1,2);
+        super("Choice2Node",CHOICE,1,2);
         //default values for choices, uniform
+        getInfo().setParameterName(PARAM_CHOICE, "Choice");
+        getInfo().setParameterNumIdx(PARAM_CHOICE, 2);
+        getInfo().setParameterIdxNames(PARAM_CHOICE, new String[]{"A","B"});
         setParameter(PARAM_CHOICE, new Bernoulli(CHOICE_PROB)); 
         getParameter(PARAM_CHOICE).setAlwaysRandomise(true);
     }

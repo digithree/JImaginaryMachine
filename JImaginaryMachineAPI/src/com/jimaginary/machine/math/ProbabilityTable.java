@@ -32,4 +32,12 @@ public class ProbabilityTable extends MathFunction {
         lastVal = 0;
         return 0;
     }
+
+    @Override
+    public float probMassOrDensity(float x) {
+        if( (int)x >= 0 && (int)x < paramVals.length ) {
+            return paramVals[(int)x];
+        }
+        return 0.f;
+    }
 }
