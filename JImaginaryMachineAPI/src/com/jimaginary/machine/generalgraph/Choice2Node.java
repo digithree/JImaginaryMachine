@@ -6,6 +6,7 @@
 
 package com.jimaginary.machine.generalgraph;
 
+import com.jimaginary.machine.api.ConsoleWindowOut;
 import com.jimaginary.machine.api.Graph;
 import com.jimaginary.machine.api.GraphNode;
 import static com.jimaginary.machine.api.GraphNode.CHOICE;
@@ -42,7 +43,7 @@ public class Choice2Node extends GraphNode {
     public GraphNode process( Graph.GraphPacket graphPacket ) {
         int choice = (int)getParameter(PARAM_CHOICE).evaluate();
 
-        System.out.println(getName()+" \t\t- choose "+(choice==0?"A":"B"));
+        ConsoleWindowOut.getInstance().println(getName()+" \t\t- choose "+(choice==0?"A":"B"));
         return getNext(choice);
     }
 }

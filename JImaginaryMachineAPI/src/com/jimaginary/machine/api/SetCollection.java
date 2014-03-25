@@ -7,6 +7,7 @@
 package com.jimaginary.machine.api;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  *
@@ -23,7 +24,7 @@ public abstract class SetCollection {
 
     protected String name;
 
-    protected ArrayList<Set> sets;
+    protected List<Set> sets;
     protected Set currentSet;
     protected boolean setsFollowCurrentHead;
     protected int setsFollowMode;
@@ -111,6 +112,10 @@ public abstract class SetCollection {
     protected int getNumSets() {
         return sets.size();
     }
+    
+    protected List<Set> getSets() {
+        return sets;
+    }
 
     protected Set getCurrentSet() {
         return currentSet;
@@ -128,7 +133,7 @@ public abstract class SetCollection {
     }
 
     public Set sampleSubSet( boolean rnd, int offset, int size ) {
-        System.out.println(name+":sampleSubSet");
+        ConsoleWindowOut.getInstance().println(name+":sampleSubSet");
         if( currentSet != null ) {
             // Move read head
             if( rnd ) {
@@ -160,16 +165,16 @@ public abstract class SetCollection {
             }
             // sample
             Set returnSet = currentSet.subSet(size);
-            System.out.println("Sampled sub set...");
+            ConsoleWindowOut.getInstance().println("Sampled sub set...");
             returnSet.display();		//default, doesn't work for PCM sets
             return returnSet;
         }
-        System.out.println(name+":can't sample, currentSet is null");
+        ConsoleWindowOut.getInstance().println(name+":can't sample, currentSet is null");
         return null;
     }
 
     public boolean writeToSet( boolean rnd, int offset, Set _set ) {
-        System.out.println(name+":writeToSet");
+        ConsoleWindowOut.getInstance().println(name+":writeToSet");
         if( currentSet != null ) {
             // Move write head
             if( rnd ) {
@@ -198,7 +203,7 @@ public abstract class SetCollection {
             }
             // if couldn't write, try moving to other set
             if( !retFlag ) {
-                System.out.println(name+": couldn't write to set!");
+                ConsoleWindowOut.getInstance().println(name+": couldn't write to set!");
                 for( Set set : sets ) {
                     if( set != currentSet ) {
                         if( set.canWrite ) {
@@ -206,7 +211,7 @@ public abstract class SetCollection {
                         }
                     }
                     if( retFlag ) {
-                        System.out.println(name+": changed set automatically from "+currentSet.name+" to "+set.name);
+                        ConsoleWindowOut.getInstance().println(name+": changed set automatically from "+currentSet.name+" to "+set.name);
                         currentSet = set;
                         break;
                     }
@@ -214,7 +219,7 @@ public abstract class SetCollection {
             }
             return retFlag;
         }
-        System.out.println(name+": can't write, currentSet is null");
+        ConsoleWindowOut.getInstance().println(name+": can't write, currentSet is null");
         return false;
     }
 

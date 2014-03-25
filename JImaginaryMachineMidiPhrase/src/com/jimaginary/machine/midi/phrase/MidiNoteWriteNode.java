@@ -6,6 +6,7 @@
 
 package com.jimaginary.machine.midi.phrase;
 
+import com.jimaginary.machine.api.ConsoleWindowOut;
 import com.jimaginary.machine.api.Graph;
 import com.jimaginary.machine.api.GraphNode;
 import static com.jimaginary.machine.api.GraphNode.WRITE;
@@ -46,7 +47,7 @@ public class MidiNoteWriteNode extends GraphNode {
         // process
         int offset = (int)getParameter(PARAM_JUMP).lastValue();
 
-        System.out.println( getName()+"\t\t\t - process: offset "+offset );
+        ConsoleWindowOut.getInstance().println( getName()+"\t\t\t - process: offset "+offset );
 
         boolean writeSuccess = graphPacket.outputSetCollection
                 .writeToSet(false,offset,graphPacket.tempSet);
@@ -55,7 +56,7 @@ public class MidiNoteWriteNode extends GraphNode {
 
         if( !writeSuccess ) { // Sequence is full
             // FINISHED!
-            System.out.println( "-=-=-=-=-=-==== REACHED END OF PHRASE ====-=-=-=-=-=-");
+            ConsoleWindowOut.getInstance().println( "-=-=-=-=-=-==== REACHED END OF PHRASE ====-=-=-=-=-=-");
             return null;
         }
 

@@ -6,6 +6,8 @@
 
 package com.jimaginary.machine.api;
 
+import org.openide.windows.InputOutput;
+
 /**
  *
  * @author simonkenny
@@ -382,9 +384,9 @@ public class Set {
     public void display() {
         if( displayMode == DISPLAY_VALUES ) {
             setValueText();
-            System.out.println( name+" contents:   "+description);
+            ConsoleWindowOut.getInstance().println( name+" contents:   "+description);
         } else if( displayMode == DISPLAY_GRAPH ) {
-            System.out.println(name+": displaying");
+            ConsoleWindowOut.getInstance().println(name+": displaying");
             String printChar = "0";
             float maxPveVal[] = new float[GRAPH_WIDTH];
             float maxNveVal[] = new float[GRAPH_WIDTH];
@@ -403,35 +405,35 @@ public class Set {
                     }
                 }
             }
-            System.out.println("");
+            ConsoleWindowOut.getInstance().println("");
             float yBin = 1.f/(float)GRAPH_HEIGHT;
             for( int y = GRAPH_HEIGHT ; y > 0 ; y-- ) {
                 for( int x = 0 ; x < GRAPH_WIDTH ; x++ ) {
                     //print(String.format("%.2f",maxPveVal[x])+", ");
                     if( maxPveVal[x] > (y*yBin)  ) {
-                        System.out.print(printChar);
+                        ConsoleWindowOut.getInstance().print(printChar);
                     } else {
-                        System.out.print(" ");
+                        ConsoleWindowOut.getInstance().print(" ");
                     }
                 }
-                System.out.println("");
+                ConsoleWindowOut.getInstance().println("");
             }
             for( int x = 0 ; x < GRAPH_WIDTH ; x++ ) {
-                System.out.print("-");
+                ConsoleWindowOut.getInstance().print("-");
             }
-            System.out.println("");
+            ConsoleWindowOut.getInstance().println("");
             for( int y = 1 ; y <= GRAPH_HEIGHT ; y++ ) {
                 for( int x = 0 ; x < GRAPH_WIDTH ; x++ ) {
                     //print(String.format("%.2f",maxNveVal[x])+", ");
                     if( maxNveVal[x] < -(y*yBin) ) {
-                        System.out.print(printChar);
+                        ConsoleWindowOut.getInstance().print(printChar);
                     } else {
-                        System.out.print(" ");
+                        ConsoleWindowOut.getInstance().print(" ");
                     }
                 }
-                System.out.println("");
+                ConsoleWindowOut.getInstance().println("");
             }
-            System.out.println("\n[Graph end]");
+            ConsoleWindowOut.getInstance().println("\n[Graph end]");
         }
     }
 }

@@ -6,6 +6,7 @@
 
 package com.jimaginary.machine.midi.phrase;
 
+import com.jimaginary.machine.api.ConsoleWindowOut;
 import com.jimaginary.machine.api.Graph;
 import com.jimaginary.machine.api.GraphNode;
 import static com.jimaginary.machine.api.GraphNode.SAMPLE;
@@ -74,7 +75,7 @@ public class MidiNoteSampleNode extends GraphNode {
            }
        }
        // move read head (have no effect if random chosen)
-       System.out.println( getName()+"\t\t- processing: offset = "+offset);
+       ConsoleWindowOut.getInstance().println( getName()+"\t\t- processing: offset = "+offset);
        graphPacket.tempSet = graphPacket.inputSetCollection.sampleSubSet(rnd,offset,(int)getParameter(PARAM_SIZE).lastValue());
 
        graphPacket.displayVariables();

@@ -6,6 +6,7 @@
 
 package com.jimaginary.machine.midi.phrase;
 
+import com.jimaginary.machine.api.ConsoleWindowOut;
 import com.jimaginary.machine.api.Graph;
 import com.jimaginary.machine.api.GraphNode;
 import static com.jimaginary.machine.api.GraphNode.MODIFY;
@@ -49,7 +50,7 @@ public class MidiPhraseChooseModifyNode extends GraphNode {
                     .chooseSet((int)getParameter(PARAM_PHRASE).lastValue());
         }
 
-        System.out.println(getName()+"\t\t - choose phrase "+(int)(getParameter(PARAM_PHRASE).lastValue()+1));
+        ConsoleWindowOut.getInstance().println(getName()+"\t\t - choose phrase "+(int)(getParameter(PARAM_PHRASE).lastValue()+1));
 
         return getNext(0);
     }

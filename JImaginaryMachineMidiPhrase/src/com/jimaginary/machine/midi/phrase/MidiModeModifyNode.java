@@ -6,6 +6,7 @@
 
 package com.jimaginary.machine.midi.phrase;
 
+import com.jimaginary.machine.api.ConsoleWindowOut;
 import com.jimaginary.machine.api.Graph;
 import com.jimaginary.machine.api.GraphNode;
 import static com.jimaginary.machine.api.GraphNode.MODIFY;
@@ -48,7 +49,7 @@ public class MidiModeModifyNode extends GraphNode {
             ((MidiPhraseInputSetCollection)graphPacket.inputSetCollection).createKeyAndModeSet(-1,(int)getParameter(PARAM_MODE).lastValue());
         }
 
-        System.out.println(getName()+"\t\t\t - set mode to "+MidiModalConstants.MODE_NAMES[(int)getParameter(PARAM_MODE).lastValue()]);
+        ConsoleWindowOut.getInstance().println(getName()+"\t\t\t - set mode to "+MidiModalConstants.MODE_NAMES[(int)getParameter(PARAM_MODE).lastValue()]);
 
         return getNext(0);
     }

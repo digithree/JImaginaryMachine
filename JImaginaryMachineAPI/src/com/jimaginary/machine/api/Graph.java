@@ -198,6 +198,7 @@ public class Graph extends Observable {
 
     
     public void process() {
+        ConsoleWindowOut.getInstance().createIO("process");
         if( !valid ) {
             return;
         }
@@ -213,6 +214,11 @@ public class Graph extends Observable {
             }
         }
         graphPacket.outputSetCollection.display();
+        // add sets to SetData
+        SetData.getInstance().addSets(graphPacket.outputSetCollection.getSets());
+        ConsoleWindowOut.getInstance().println("number of sets in SetData: "+SetData.getInstance().getSets().size());
+        graphPacket = null;
+        ConsoleWindowOut.getInstance().freeIO();
     }
 
     // ------------------------------------------------------
@@ -224,7 +230,7 @@ public class Graph extends Observable {
         InputOutput io = IOProvider.getDefault().getIO ("Graph builder", true);
         // choose number of nodes
         int numNodes = minNodes + (int)((float)(maxNodes-minNodes)*Math.random());
-        io.getOut().println( "making " + numNodes + " random nodes (plus start node)");
+        ConsoleWindowOut.getInstance().println( "making " + numNodes + " random nodes (plus start node)");
         // create nodes
         for( int i = 0 ; i < numNodes ; i++ ) {
             int selectedNode = Utils.getIdxFromProbTable(STANDARD_NODE_SELECTION_PROBS);
@@ -249,12 +255,12 @@ public class Graph extends Observable {
                         rightTypeInfos.get(idx).getGraphNodeName());
             }
             if( node != null ) {
-                io.getOut().println( "created node: "+node.getName());
+                ConsoleWindowOut.getInstance().println( "created node: "+node.getName());
                 System.out.println("created node: "+node.getName());
                 node.randomiseParameters();
                 addNode(node);
             } else {
-                io.getOut().println("NULL node");
+                ConsoleWindowOut.getInstance().println("NULL node");
                 System.out.println("NULL node");
                 i--;
             }
@@ -262,44 +268,44 @@ public class Graph extends Observable {
         // connect nodes (we will connect ALL possible connections)
         for( GraphNode fromNode : allNodes ) {
             if( !fromNode.nextNodesSet() ) {
-                io.getOut().println( "**Connecting node: "+fromNode.getName());
+                ConsoleWindowOut.getInstance().println( "**Connecting node: "+fromNode.getName());
                 // create prob table with connection to self weighted down
                 int fromNodeType = fromNode.getType();
                 float connectionWeights[] = new float[allNodes.size()];
-                io.getOut().print("connection weights: ");
+                ConsoleWindowOut.getInstance().print("connection weights: ");
                 for( int i = 0 ; i < connectionWeights.length ; i++ ) {
                     //connectionWeights[i] = (fromNode == allNodes.get(i) ? (fromNode.willAllowSelfConnection() ? 1 : 0) : 4);
                     connectionWeights[i] = (float)transitionsForBuilding.get(fromNodeType,allNodes.get(i).getType());
-                    io.getOut().print(connectionWeights[i]+", ");
+                    ConsoleWindowOut.getInstance().print(connectionWeights[i]+", ");
                 }
-                io.getOut().println(" ]]");
+                ConsoleWindowOut.getInstance().println(" ]]");
                 float connectionProbTable[] = Utils.createWeightedProbTable(connectionWeights);
 
-                io.getOut().print( "probs: ");
+                ConsoleWindowOut.getInstance().print( "probs: ");
                 for( int i = 0 ; i < connectionProbTable.length ; i++ ) {
-                    io.getOut().print( connectionProbTable[i] + "," );
+                    ConsoleWindowOut.getInstance().print( connectionProbTable[i] + "," );
                 }
-                io.getOut().println( " ]]");
+                ConsoleWindowOut.getInstance().println( " ]]");
 
-                io.getOut().println( "Num next nodes: "+fromNode.maxNextConnections);
+                ConsoleWindowOut.getInstance().println( "Num next nodes: "+fromNode.maxNextConnections);
                 for( int i = 0 ; i < fromNode.maxNextConnections ; i++ ) {
-                    io.getOut().println( "\n   setting from connection " + i + " ] ");
+                    ConsoleWindowOut.getInstance().println( "\n   setting from connection " + i + " ] ");
                     boolean done = false;
                     int tries = 0;
                     while(!done && tries++ < NODE_CONNECTION_MAX_TRIES ) {
                         int idx = Utils.getIdxFromProbTable( connectionProbTable );
-                        io.getOut().print( idx + " ");
+                        ConsoleWindowOut.getInstance().print( idx + " ");
                         if( allNodes.get(idx).willAcceptConnectionFrom(fromNode) ) {
                             if( fromNode.addNext(i,allNodes.get(idx)) ) {
-                                io.getOut().println( "\n   SET! to node "+allNodes.get(idx).getName());
+                                ConsoleWindowOut.getInstance().println( "\n   SET! to node "+allNodes.get(idx).getName());
                                 done = true;
                             } else {
-                                io.getOut().println( "\n   couldn't set to node "+allNodes.get(idx).getName());
+                                ConsoleWindowOut.getInstance().println( "\n   couldn't set to node "+allNodes.get(idx).getName());
                             }
                         }
                     }
                 }
-                io.getOut().println("");
+                ConsoleWindowOut.getInstance().println("");
             }
         }
         // delete any dead nodes (nodes with nothing going to them)
@@ -308,17 +314,17 @@ public class Graph extends Observable {
             changeMade = false;
             for( int i = 0 ; i < allNodes.size() ; i++ ) {
                 if( !(allNodes.get(i) instanceof StartNode) ) {
-                    io.getOut().println( allNodes.get(i).getName()+" parents:");
+                    ConsoleWindowOut.getInstance().println( allNodes.get(i).getName()+" parents:");
                     int numPrevious = 0;
                     for( GraphNode node : allNodes.get(i).previous ) {
                         if( node != null ) {
-                            io.getOut().println( "\t\t"+node.getName());
+                            ConsoleWindowOut.getInstance().println( "\t\t"+node.getName());
                             numPrevious++;
                         }
                     }
-                    io.getOut().println( "\t\thas "+numPrevious+" parents");
+                    ConsoleWindowOut.getInstance().println( "\t\thas "+numPrevious+" parents");
                     if( numPrevious == 0 || (numPrevious == 1 && allNodes.get(i) == allNodes.get(i).previous.get(0)) ) {
-                        io.getOut().println( "removing "+allNodes.get(i).getName());
+                        ConsoleWindowOut.getInstance().println( "removing "+allNodes.get(i).getName());
                         allNodes.get(i).remove();
                         allNodes.remove(i);
                         changeMade = true;
@@ -329,16 +335,16 @@ public class Graph extends Observable {
         }
 
         // remove nodes which execution flow cannot possibly reach
-        io.getOut().println( "\nverifying nodes are reachable from StartNode...");
+        ConsoleWindowOut.getInstance().println( "\nverifying nodes are reachable from StartNode...");
         ArrayList<GraphNode>verifiedNodes = new ArrayList<GraphNode>();
         headNode.verify(verifiedNodes);
-        io.getOut().println("Removing unverified nodes...");
+        ConsoleWindowOut.getInstance().println("Removing unverified nodes...");
         boolean noChange = false;
         while(!noChange) {
             noChange = true;
             for(GraphNode node : allNodes) {
                 if( !verifiedNodes.contains(node) ) {
-                    io.getOut().println( "\tremoved "+node.getName()+", not reachable"); 
+                    ConsoleWindowOut.getInstance().println( "\tremoved "+node.getName()+", not reachable"); 
                     node.remove();
                     allNodes.remove(node);
                     noChange = false;
@@ -346,7 +352,7 @@ public class Graph extends Observable {
                 }
             }
         }
-        io.getOut().println("done");
+        ConsoleWindowOut.getInstance().println("done");
 
         // finally, test to see if there is at least one Pick and one Put
         boolean atLeastOnePick = false;
@@ -379,7 +385,7 @@ public class Graph extends Observable {
             if( tempSet != null ) {
                 tempSet.display();
             } else {
-                System.out.println("GraphPacket:displayVariables tempSet is null");
+                ConsoleWindowOut.getInstance().println("GraphPacket:displayVariables tempSet is null");
             }
         }
     }

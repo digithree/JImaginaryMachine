@@ -8,6 +8,7 @@ package com.jimaginary.machine.midi.phrase;
 
 // --- Modify Nodes
 
+import com.jimaginary.machine.api.ConsoleWindowOut;
 import com.jimaginary.machine.api.Graph;
 import com.jimaginary.machine.api.GraphNode;
 import static com.jimaginary.machine.api.GraphNode.MODIFY;
@@ -47,7 +48,7 @@ import java.util.logging.Logger;
             if( graphPacket.inputSetCollection instanceof MidiPhraseInputSetCollection ) {
                 ((MidiPhraseInputSetCollection)graphPacket.inputSetCollection).chooseSet((int)getParameter(PARAM_KEY_TYPE).lastValue());
             }
-            System.out.println(getName()+"\t\t - set key type to "+PARAM_KEY_TYPE_NAME[(int)getParameter(PARAM_KEY_TYPE).lastValue()]);
+            ConsoleWindowOut.getInstance().println(getName()+"\t\t - set key type to "+PARAM_KEY_TYPE_NAME[(int)getParameter(PARAM_KEY_TYPE).lastValue()]);
             return getNext(0);
         }
     }

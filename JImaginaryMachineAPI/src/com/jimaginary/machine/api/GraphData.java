@@ -21,6 +21,10 @@ public class GraphData {
     public static String currentNodeName;
     public static String lastNodeName;
     
+    protected GraphData() {
+        // thwart instantiation
+    }
+    
     public static boolean setGraph(Graph _graph) {
         System.out.println("GraphData:setGraph");
         if( graph != null ) {
