@@ -21,4 +21,7 @@ public class SetItem {
         this.name = name;
     }
     
+    public String getName() {
+        return name;
+    }
 }

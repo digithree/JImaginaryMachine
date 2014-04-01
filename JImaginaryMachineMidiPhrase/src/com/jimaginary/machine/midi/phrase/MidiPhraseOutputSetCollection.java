@@ -16,6 +16,8 @@ import java.io.File;
  * @author simonkenny
  */
 public final class MidiPhraseOutputSetCollection extends SetCollection {
+    private static int SET_ID_COUNT = 0;
+    
     MidiCodec midiCodec;
     MidiPlayer midiPlayer;
     int numPhrases, phraseLength;
@@ -47,7 +49,7 @@ public final class MidiPhraseOutputSetCollection extends SetCollection {
         }
         midiPlayer = new MidiPlayer(phraseLength);
         for( int i = 0 ; i < numPhrases ; i++ ) {
-                Set set = new Set("MIDI-Phrase-"+(i+1),phraseLength,phraseLength,Set.DISPLAY_VALUES);
+                Set set = new Set("MIDI-Phrase-"+(SET_ID_COUNT++),phraseLength,phraseLength,Set.DISPLAY_VALUES);
                 set.outOfBoundsWriteProtect = true;
                 sets.add( set );
 

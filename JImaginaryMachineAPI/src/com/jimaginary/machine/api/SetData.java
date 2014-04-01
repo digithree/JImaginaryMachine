@@ -31,10 +31,18 @@ public class SetData extends Observable {
     
     public void addSet(Set set) {
         sets.add(set);
+        System.out.println("SetData:addSet "+set.getName());
+        setChanged();
+        notifyObservers();
     }
     
     public void addSets(List<Set> otherSets) {
         sets.addAll(otherSets);
+        for( Set set : otherSets ) {
+            System.out.println("SetData:addSets "+set.getName());
+        }
+        setChanged();
+        notifyObservers();
     }
     
     public List<Set> getSets() {
@@ -52,5 +60,8 @@ public class SetData extends Observable {
     
     public void clearSets() {
         sets.clear();
+        System.out.println("SetData:clear");
+        setChanged();
+        notifyObservers();
     }
 }

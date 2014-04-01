@@ -5,7 +5,12 @@
  */
 package jimaginary.machine.set.selector;
 
+import com.jimaginary.machine.api.Set;
+import com.jimaginary.machine.api.SetData;
 import java.awt.BorderLayout;
+import java.util.List;
+import java.util.Observable;
+import java.util.Observer;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
@@ -59,7 +64,16 @@ public final class SetSelectorTopComponent extends TopComponent
 
         setDisplayName("Set Selector");
         
-        //mgr.setRootContext(new SelectionListItemNode());
+        mgr.setRootContext(new SetItemNode());
+    }
+    
+    public class SetDataObserver implements Observer {
+        @Override
+        public void update(Observable o, Object arg) {
+            System.out.println("SetDataObserver:update()");
+            mgr.setRootContext(new SetItemNode());
+        }
+        
     }
 
     /**
@@ -86,12 +100,12 @@ public final class SetSelectorTopComponent extends TopComponent
     // End of variables declaration//GEN-END:variables
     @Override
     public void componentOpened() {
-        // TODO add custom code on component opening
+        SetData.getInstance().addObserver(new SetDataObserver());
     }
 
     @Override
     public void componentClosed() {
-        // TODO add custom code on component closing
+        SetData.getInstance().deleteObservers();
     }
 
     void writeProperties(java.util.Properties p) {

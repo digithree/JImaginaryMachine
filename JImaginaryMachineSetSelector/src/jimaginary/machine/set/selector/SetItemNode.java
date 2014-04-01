@@ -21,11 +21,19 @@ public class SetItemNode extends AbstractNode implements PropertyChangeListener 
     SetItemNode() {
         super (Children.create(new SetItemNodeChildFactory(), true));
         setItem = new SetItem();
+        setDisplayName("Sets");
     }
     
     SetItemNode(String setName) {
         super(Children.LEAF);
         this.setItem = new SetItem(setName);
+        setDisplayName(setItem.getName());
+    }
+    
+    SetItemNode(SetItem setItem) {
+        super(Children.LEAF);
+        this.setItem = setItem;
+        setDisplayName(setItem.getName());
     }
 
     @Override

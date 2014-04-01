@@ -12,6 +12,7 @@ import org.openide.nodes.ChildFactory;
 import org.openide.util.HelpCtx;
 import com.jimaginary.machine.api.Set;
 import com.jimaginary.machine.api.SetData;
+import org.openide.nodes.Node;
 
 /**
  *
@@ -27,6 +28,18 @@ public class SetItemNodeChildFactory extends ChildFactory<SetItem>
             listToPopulate.add(new SetItem(set.getName()));
         }
         return true;
+    }
+    
+    @Override
+    protected Node createNodeForKey(SetItem key) {
+        /*
+        Node result = new AbstractNode(
+            Children.create(new GraphTypeNodeFactory(), true), 
+            Lookups.singleton(key));
+        result.setDisplayName(key.toString());
+        return result;
+                */
+        return new SetItemNode(key);
     }
 
     @Override
