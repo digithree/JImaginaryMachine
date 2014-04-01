@@ -58,6 +58,15 @@ public class SetData extends Observable {
         return null;
     }
     
+    public boolean removeSetByName(String name) {
+        Set removeSet = getSetByName(name);
+        if( removeSet != null ) {
+            sets.remove(removeSet);
+            return true;
+        }
+        return false;
+    }
+    
     public void clearSets() {
         sets.clear();
         System.out.println("SetData:clear");
