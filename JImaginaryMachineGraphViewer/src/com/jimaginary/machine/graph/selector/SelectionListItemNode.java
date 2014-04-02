@@ -15,8 +15,6 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
-import org.netbeans.api.progress.ProgressHandle;
-import org.netbeans.api.progress.ProgressHandleFactory;
 import org.openide.ErrorManager;
 import org.openide.awt.StatusDisplayer;
 import org.openide.nodes.AbstractNode;
@@ -132,7 +130,7 @@ public class SelectionListItemNode extends AbstractNode implements PropertyChang
         @Override
         public void actionPerformed(ActionEvent e) {
             final SelectionListItem obj = getLookup().lookup(SelectionListItem.class);
-            final ProgressHandle progressHandle = ProgressHandleFactory.createHandle("Creating graph");
+            //final ProgressHandle progressHandle = ProgressHandleFactory.createHandle("Creating graph");
             /*
             Thread progressThread = new Thread( new Runnable() 
             {

@@ -27,7 +27,7 @@ public class PoissonParamPropertyPanel extends javax.swing.JPanel {
     private final MathFunction mathFunc;
     
     private final ParameterPropertyEditor editor;
-    ChartPanel chartPanel;
+    private ChartPanel chartPanel;
     
     /**
      * Creates new form PoissonParamPropertyPanel

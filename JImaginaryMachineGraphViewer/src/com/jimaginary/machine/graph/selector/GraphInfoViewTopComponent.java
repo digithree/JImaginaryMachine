@@ -43,6 +43,8 @@ import org.openide.util.Utilities;
 })
 public final class GraphInfoViewTopComponent extends TopComponent 
         implements LookupListener {
+    
+    private Lookup.Result<SelectionListItem> result = null;
 
     public GraphInfoViewTopComponent() {
         initComponents();
@@ -131,8 +133,6 @@ public final class GraphInfoViewTopComponent extends TopComponent
         String version = p.getProperty("version");
         // TODO read your settings according to their version
     }
-    
-    private Lookup.Result<SelectionListItem> result = null;
 
     @Override
     public void resultChanged(LookupEvent lookupEvent) {

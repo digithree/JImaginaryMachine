@@ -5,10 +5,8 @@
  */
 package jimaginary.machine.set.selector;
 
-import com.jimaginary.machine.api.Set;
 import com.jimaginary.machine.api.SetData;
 import java.awt.BorderLayout;
-import java.util.List;
 import java.util.Observable;
 import java.util.Observer;
 import org.netbeans.api.settings.ConvertAsProperties;

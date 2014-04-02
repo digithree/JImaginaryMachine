@@ -6,7 +6,6 @@
 
 package jimaginary.machine.set.selector;
 
-import java.util.ArrayList;
 import java.util.List;
 import org.openide.nodes.ChildFactory;
 import org.openide.util.HelpCtx;
@@ -20,12 +19,24 @@ import org.openide.nodes.Node;
  */
 public class SetItemNodeChildFactory extends ChildFactory<SetItem>
             implements HelpCtx.Provider{
+    
+    private final SetItem setItem;
+    
+    SetItemNodeChildFactory() {
+        setItem = null;
+    }
+    
+    SetItemNodeChildFactory(SetItem setItem) {
+        this.setItem = setItem;
+    }
 
     @Override
     protected boolean createKeys(List<SetItem> listToPopulate) {
-        List<Set> sets = SetData.getInstance().getSets();
-        for( Set set : sets ) {
-            listToPopulate.add(new SetItem(set.getName()));
+        if( setItem == null ) {
+            List<Set> sets = SetData.getInstance().getSets();
+            for( Set set : sets ) {
+                listToPopulate.add(new SetItem(set.getName()));
+            }
         }
         return true;
     }

@@ -73,11 +73,6 @@ public class MidiCodec {
         }
     }
 
-
-    public MidiCodec() {
-      // constructor do stuff? no
-    }
-
     public void displaySetAsString( Set set ) {
       System.out.print( set.getName()+":   " );
       for( int i = 0 ; i < set.getValues().length ; i++ ) {
@@ -486,7 +481,7 @@ public class MidiCodec {
      * @param noteVal
      * @return 
      */
-    public String noteValToString( int noteVal ) {
+    public static String noteValToString( int noteVal ) {
       String noteStr = Integer.toString(noteVal);
 
       if ( noteVal >= 0 && noteVal < 128 ) {
@@ -501,7 +496,7 @@ public class MidiCodec {
       return noteStr;
     }
 
-    public int StringToNoteVal( String noteStr ) {
+    public static int StringToNoteVal( String noteStr ) {
       String letterStr = new String(noteStr.substring(0, noteStr.length()-1));
       String octaveStr = new String(noteStr.substring(noteStr.length()-1, noteStr.length()));
       int octave = Integer.valueOf(octaveStr);
