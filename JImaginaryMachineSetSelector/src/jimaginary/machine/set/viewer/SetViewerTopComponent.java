@@ -11,7 +11,6 @@ import com.jimaginary.machine.api.SetData;
 import java.awt.BorderLayout;
 import java.util.Collection;
 import jimaginary.machine.set.selector.SetItem;
-import jimaginary.machine.set.viewer.Bundle;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;

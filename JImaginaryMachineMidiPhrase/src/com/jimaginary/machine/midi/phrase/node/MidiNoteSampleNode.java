@@ -4,12 +4,11 @@
  * and open the template in the editor.
  */
 
-package com.jimaginary.machine.midi.phrase;
+package com.jimaginary.machine.midi.phrase.node;
 
 import com.jimaginary.machine.api.ConsoleWindowOut;
 import com.jimaginary.machine.api.Graph;
 import com.jimaginary.machine.api.GraphNode;
-import static com.jimaginary.machine.api.GraphNode.SAMPLE;
 import com.jimaginary.machine.math.ConstantFunction;
 import com.jimaginary.machine.math.Poisson;
 import java.text.ParseException;
@@ -30,7 +29,7 @@ public class MidiNoteSampleNode extends GraphNode {
    private final int PARAM_JUMP = 0;
    private final int PARAM_SIZE = 1;
 
-   MidiNoteSampleNode() {
+   public MidiNoteSampleNode() {
        super("MidiNoteSampleNode",SAMPLE,2,1);
        getInfo().setParameterName(PARAM_JUMP, "Jump amount");
        getInfo().setParameterNumIdx(PARAM_JUMP, PARAM_JUMP_LIST.length);

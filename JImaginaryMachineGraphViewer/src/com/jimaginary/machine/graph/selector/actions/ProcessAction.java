@@ -12,6 +12,7 @@ import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.awt.ActionReferences;
 import org.openide.awt.ActionRegistration;
+import org.openide.awt.StatusDisplayer;
 import org.openide.util.NbBundle.Messages;
 
 @ActionID(
@@ -31,6 +32,10 @@ public final class ProcessAction implements ActionListener {
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        GraphData.getGraph().process();
+        if( GraphData.getGraph() != null ) {
+            GraphData.getGraph().process();
+        } else {
+            StatusDisplayer.getDefault().setStatusText("No graph present, can't process");
+        }
     }
 }

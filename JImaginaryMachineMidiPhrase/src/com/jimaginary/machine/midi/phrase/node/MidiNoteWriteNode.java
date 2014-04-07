@@ -4,24 +4,23 @@
  * and open the template in the editor.
  */
 
-package com.jimaginary.machine.midi.phrase;
+package com.jimaginary.machine.midi.phrase.node;
 
 import com.jimaginary.machine.api.ConsoleWindowOut;
 import com.jimaginary.machine.api.Graph;
 import com.jimaginary.machine.api.GraphNode;
-import static com.jimaginary.machine.api.GraphNode.WRITE;
 import com.jimaginary.machine.math.Poisson;
 import java.text.ParseException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class MidiNoteWriteNode extends GraphNode {
-    final String []PARAM_JUMP_NAMES = { "None", "Next", "+2", "+3", "+4", "+5", "+6" };
+    final String []PARAM_JUMP_NAMES = { "Next", "+2", "+3", "+4", "+5", "+6" };
     final float PARAM_JUMP_MEAN = 0.39f;
 
     private final int PARAM_JUMP = 0;
 
-    MidiNoteWriteNode() {
+    public MidiNoteWriteNode() {
         super("MidiNoteWriteNode",WRITE,1,1);
         setAllowsSelfConnection(true);
         getInfo().setParameterName(PARAM_JUMP, "Jump amount");
@@ -45,7 +44,8 @@ public class MidiNoteWriteNode extends GraphNode {
             Logger.getLogger(MidiKeyModifyNode.class.getName()).log(Level.SEVERE, null, ex);
         }
         // process
-        int offset = (int)getParameter(PARAM_JUMP).lastValue();
+        //  add one to lastValue, as lastValue start at 0 and the smallest offset for us is 1
+        int offset = 1 + (int)getParameter(PARAM_JUMP).lastValue();
 
         ConsoleWindowOut.getInstance().println( getName()+"\t\t\t - process: offset "+offset );
 

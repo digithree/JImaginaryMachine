@@ -62,6 +62,8 @@ public class SetData extends Observable {
         Set removeSet = getSetByName(name);
         if( removeSet != null ) {
             sets.remove(removeSet);
+            setChanged();
+            notifyObservers();
             return true;
         }
         return false;

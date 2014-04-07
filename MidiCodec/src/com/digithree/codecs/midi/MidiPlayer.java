@@ -58,12 +58,19 @@ public class MidiPlayer {
             }
         }
     }
+    
+    public boolean isPlaying() {
+        if( sequencer != null ) {
+            return sequencer.isRunning();
+        }
+        return false;
+    }
 
     public void setLooping(boolean flag) {
         if( flag ) {
             sequencer.setLoopCount(javax.sound.midi.Sequencer.LOOP_CONTINUOUSLY);
         } else {
-            sequencer.setLoopCount(1);
+            sequencer.setLoopCount(0);
         }
     }
 

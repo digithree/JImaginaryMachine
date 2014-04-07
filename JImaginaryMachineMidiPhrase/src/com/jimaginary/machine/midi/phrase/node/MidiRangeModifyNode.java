@@ -4,13 +4,14 @@
  * and open the template in the editor.
  */
 
-package com.jimaginary.machine.midi.phrase;
+package com.jimaginary.machine.midi.phrase.node;
 
 import com.jimaginary.machine.api.Graph;
 import com.jimaginary.machine.api.GraphNode;
-import static com.jimaginary.machine.api.GraphNode.MODIFY;
 import com.jimaginary.machine.math.Bernoulli;
 import com.jimaginary.machine.math.Poisson;
+import com.jimaginary.machine.midi.phrase.MidiModalConstants;
+import com.jimaginary.machine.midi.phrase.MidiPhraseInputSetCollection;
 import java.text.ParseException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -28,7 +29,7 @@ public class MidiRangeModifyNode extends GraphNode {
     private final float PARAM_SIZE_PROB_MEAN = 0.5f;
     private final int PARAM_SIZE_MAX = 2;  //actually 3, including 0 because 0 is invalid size
 
-    MidiRangeModifyNode() {
+    public MidiRangeModifyNode() {
         super("MidiRangeModifyNode",MODIFY,3,1);
         getInfo().setParameterName(PARAM_OCTAVE, "Octave start");
         getInfo().setParameterName(PARAM_OCTAVE_RND, "Is octave rnd?");

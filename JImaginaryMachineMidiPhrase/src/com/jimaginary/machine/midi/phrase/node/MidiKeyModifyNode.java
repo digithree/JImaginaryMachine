@@ -4,13 +4,14 @@
  * and open the template in the editor.
  */
 
-package com.jimaginary.machine.midi.phrase;
+package com.jimaginary.machine.midi.phrase.node;
 
 import com.jimaginary.machine.api.ConsoleWindowOut;
 import com.jimaginary.machine.api.Graph;
 import com.jimaginary.machine.api.GraphNode;
-import static com.jimaginary.machine.api.GraphNode.MODIFY;
 import com.jimaginary.machine.math.Uniform;
+import com.jimaginary.machine.midi.phrase.MidiModalConstants;
+import com.jimaginary.machine.midi.phrase.MidiPhraseInputSetCollection;
 import java.text.ParseException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -18,7 +19,7 @@ import java.util.logging.Logger;
 public class MidiKeyModifyNode extends GraphNode {
     private final int PARAM_KEY = 0;    
 
-    MidiKeyModifyNode() {
+    public MidiKeyModifyNode() {
         super("MidiKeyModifyNode",MODIFY,1,1);
         getInfo().setParameterName(PARAM_KEY, "Key");
         getInfo().setParameterNumIdx(PARAM_KEY, MidiModalConstants.NUM_KEYS);

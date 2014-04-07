@@ -11,6 +11,7 @@ import com.jimaginary.machine.api.GraphNode;
 import com.jimaginary.machine.api.GraphNodeInfo;
 import com.jimaginary.machine.math.Matrix;
 import java.awt.Point;
+import java.awt.Stroke;
 import java.awt.event.KeyEvent;
 import java.beans.PropertyVetoException;
 import java.lang.reflect.InvocationTargetException;
@@ -141,8 +142,8 @@ public final class JImaginaryGraphTopComponent extends TopComponent
         for( int i = 0 ; i < info.getNumConnections(); i++ ) {
             widget = (VMDPinWidget)scene.addPin(info.getName(),id+"-pinOut-"+(i+1));
             widget.setPinName(id+"-pinOut-"+(i+1));
+            widget.getActions().addAction(ActionFactory.createExtendedConnectAction(connectionLayer, new PinConnectProvider()));
         }
-        widget.getActions().addAction(ActionFactory.createExtendedConnectAction(connectionLayer, new PinConnectProvider()));
     }
     
     private boolean addEdge(String pinFrom, String pinTo) {
@@ -152,6 +153,7 @@ public final class JImaginaryGraphTopComponent extends TopComponent
         String edge = "edge-" + edgeCount++;
         System.out.println("Trying to add edge ("+edge+") from "+pinFrom+" to "+pinTo);
         ConnectionWidget widget = (ConnectionWidget)scene.addEdge(edge);
+        // TODO : set ConnectionWidget colour
         scene.setEdgeSource(edge,pinFrom);
         scene.setEdgeTarget(edge,pinTo);
         // add key action to edges

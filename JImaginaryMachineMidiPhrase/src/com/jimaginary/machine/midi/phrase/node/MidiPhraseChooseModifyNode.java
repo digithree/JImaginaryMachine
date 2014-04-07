@@ -4,13 +4,14 @@
  * and open the template in the editor.
  */
 
-package com.jimaginary.machine.midi.phrase;
+package com.jimaginary.machine.midi.phrase.node;
 
 import com.jimaginary.machine.api.ConsoleWindowOut;
 import com.jimaginary.machine.api.Graph;
 import com.jimaginary.machine.api.GraphNode;
-import static com.jimaginary.machine.api.GraphNode.MODIFY;
 import com.jimaginary.machine.math.Uniform;
+import com.jimaginary.machine.midi.phrase.MidiModalConstants;
+import com.jimaginary.machine.midi.phrase.MidiPhraseOutputSetCollection;
 import java.text.ParseException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -24,7 +25,7 @@ TODO : the upper limit set on the number of phrases here is the default number.
 public class MidiPhraseChooseModifyNode extends GraphNode {
     private final int PARAM_PHRASE = 0;
 
-    MidiPhraseChooseModifyNode() {
+    public MidiPhraseChooseModifyNode() {
         super("MidiPhraseChooseModifyNode",MODIFY,1,1);
         getInfo().setParameterName(PARAM_PHRASE, "Phrase");
         getInfo().setParameterNumIdx(PARAM_PHRASE, MidiModalConstants.DEFAULT_NUM_OUPTUT_PHRASES);

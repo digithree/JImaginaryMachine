@@ -17,6 +17,7 @@ import org.openide.explorer.ExplorerUtils;
 import org.openide.explorer.view.BeanTreeView;
 import org.openide.windows.TopComponent;
 import org.openide.util.NbBundle.Messages;
+import org.openide.util.lookup.AbstractLookup;
 import org.openide.util.lookup.InstanceContent;
 
 /**
@@ -31,7 +32,7 @@ import org.openide.util.lookup.InstanceContent;
         //iconBase="SET/PATH/TO/ICON/HERE", 
         persistenceType = TopComponent.PERSISTENCE_ALWAYS
 )
-@TopComponent.Registration(mode = "explorer", openAtStartup = false)
+@TopComponent.Registration(mode = "editor", openAtStartup = true)
 @ActionID(category = "Window", id = "jimaginary.machine.set.selector.SetSelectorTopComponent")
 @ActionReference(path = "Menu/Window" /*, position = 333 */)
 @TopComponent.OpenActionRegistration(
@@ -56,6 +57,7 @@ public final class SetSelectorTopComponent extends TopComponent
         putClientProperty(TopComponent.PROP_CLOSING_DISABLED, Boolean.TRUE);
 
         associateLookup(ExplorerUtils.createLookup(mgr, getActionMap()));
+        //associateLookup(new AbstractLookup(content));
 
         setLayout(new BorderLayout());
         add(new BeanTreeView(), BorderLayout.CENTER);
@@ -121,5 +123,9 @@ public final class SetSelectorTopComponent extends TopComponent
     @Override
     public ExplorerManager getExplorerManager() {
         return mgr;
+    }
+    
+    public InstanceContent getInstanceContent() {
+        return content;
     }
 }

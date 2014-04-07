@@ -6,6 +6,13 @@
 
 package com.jimaginary.machine.midi.phrase;
 
+import com.jimaginary.machine.midi.phrase.node.MidiModeModifyNode;
+import com.jimaginary.machine.midi.phrase.node.MidiPhraseChooseModifyNode;
+import com.jimaginary.machine.midi.phrase.node.MidiKeyTypeModifyNode;
+import com.jimaginary.machine.midi.phrase.node.MidiNoteWriteNode;
+import com.jimaginary.machine.midi.phrase.node.MidiRangeModifyNode;
+import com.jimaginary.machine.midi.phrase.node.MidiKeyModifyNode;
+import com.jimaginary.machine.midi.phrase.node.MidiNoteSampleNode;
 import com.jimaginary.machine.api.GraphNode;
 import com.jimaginary.machine.api.GraphNodeInfo;
 import com.jimaginary.machine.api.GraphResource;

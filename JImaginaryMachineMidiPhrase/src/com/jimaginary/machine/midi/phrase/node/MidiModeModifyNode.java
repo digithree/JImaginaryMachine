@@ -4,13 +4,14 @@
  * and open the template in the editor.
  */
 
-package com.jimaginary.machine.midi.phrase;
+package com.jimaginary.machine.midi.phrase.node;
 
 import com.jimaginary.machine.api.ConsoleWindowOut;
 import com.jimaginary.machine.api.Graph;
 import com.jimaginary.machine.api.GraphNode;
-import static com.jimaginary.machine.api.GraphNode.MODIFY;
 import com.jimaginary.machine.math.ProbabilityTable;
+import com.jimaginary.machine.midi.phrase.MidiModalConstants;
+import com.jimaginary.machine.midi.phrase.MidiPhraseInputSetCollection;
 import java.text.ParseException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -20,7 +21,7 @@ public class MidiModeModifyNode extends GraphNode {
     private final float[] PARAM_MODE_PROBS = { 0.2f, 0.2f, 0.14f, 0.1f, 0.1f, 0.2f, 0.06f };
 
 
-    MidiModeModifyNode() {
+    public MidiModeModifyNode() {
         super("MidiModeModifyNode",MODIFY,1,1);
         getInfo().setParameterName(PARAM_MODE, "Mode");
         getInfo().setParameterNumIdx(PARAM_MODE, MidiModalConstants.MODE_NAMES.length);
