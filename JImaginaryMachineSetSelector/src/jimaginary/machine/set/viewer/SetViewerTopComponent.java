@@ -6,10 +6,18 @@
 package jimaginary.machine.set.viewer;
 
 import com.digithree.codecs.midi.MidiCodec;
+import com.digithree.codecs.midi.MidiPlayer;
 import com.jimaginary.machine.api.Set;
 import com.jimaginary.machine.api.SetData;
 import java.awt.BorderLayout;
+import java.awt.Component;
+import java.awt.Graphics;
+import java.io.File;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.Collection;
+import javax.sound.midi.MidiSystem;
+import javax.swing.Icon;
 import jimaginary.machine.set.selector.SetItem;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
@@ -20,14 +28,22 @@ import org.jfree.chart.plot.XYPlot;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 import org.netbeans.api.settings.ConvertAsProperties;
+import org.netbeans.spi.actions.AbstractSavable;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
+import org.openide.awt.StatusDisplayer;
+import org.openide.filesystems.FileChooserBuilder;
+import org.openide.filesystems.FileObject;
+import org.openide.filesystems.FileUtil;
+import org.openide.util.ImageUtilities;
 import org.openide.util.Lookup;
 import org.openide.util.LookupEvent;
 import org.openide.util.LookupListener;
 import org.openide.windows.TopComponent;
 import org.openide.util.NbBundle.Messages;
 import org.openide.util.Utilities;
+import org.openide.util.lookup.AbstractLookup;
+import org.openide.util.lookup.InstanceContent;
 
 /**
  * Top component which displays something.
@@ -56,6 +72,8 @@ import org.openide.util.Utilities;
 public final class SetViewerTopComponent extends TopComponent 
         implements LookupListener {
     
+    private InstanceContent instanceContent = new InstanceContent();
+    
     private Lookup.Result<SetItem> result = null;
     ChartPanel chartPanel;
 
@@ -63,7 +81,7 @@ public final class SetViewerTopComponent extends TopComponent
         initComponents();
         setName(Bundle.CTL_SetViewerTopComponent());
         setToolTipText(Bundle.HINT_SetViewerTopComponent());
-
+        associateLookup(new AbstractLookup(instanceContent));
     }
 
     /**
@@ -139,6 +157,9 @@ public final class SetViewerTopComponent extends TopComponent
             SetItem setItem = allItems.iterator().next();
             // TODO : don't just use midi, might be wav data
             createMidiChart(SetData.getInstance().getSetByName(setItem.getName()));
+            //if( getLookup().lookup(SetSavable.class) == null) {
+                instanceContent.add(new SetSavable(setItem.getName()));
+            //}
         }
     }
     
@@ -180,5 +201,107 @@ public final class SetViewerTopComponent extends TopComponent
         jPanelChart.setLayout(new java.awt.BorderLayout());
         jPanelChart.add(chartPanel,BorderLayout.CENTER);
         jPanelChart.validate();
+    }
+    
+    
+    //private static final Icon ICON = ImageUtilities.loadImageIcon("save.png", false);
+ 
+    private class SetSavable extends AbstractSavable {  //implements Icon 
+        private final String name;
+        
+        SetSavable(String name) {
+            this.name = name;
+            register();
+        }
+ 
+        @Override
+        protected String findDisplayName() {
+            return name;
+        }
+
+        @Override
+        protected void handleSave() throws IOException {
+            tc().instanceContent.remove(this);
+            unregister();
+            // do save
+            System.out.println("SetItem:save for "+name);
+            Set set = SetData.getInstance().getSetByName(name);
+
+            if( set != null ) {
+                /*
+                FileSystem f = Repository.getDefault().getDefaultFileSystem();
+                FileObject o = f.getRoot().getFileObject(name);
+                */
+                //The default dir to use if no value is stored
+                File home = new File (System.getProperty("user.home"));
+                //Now build a file chooser and invoke the dialog in one line of code
+                //"libraries-dir" is our unique key
+                File newFile = new FileChooserBuilder(SetItem.class)
+                        .setTitle("Save "+name)
+                        .setDefaultWorkingDirectory(home)
+                        .setApproveText("Save")
+                        .showSaveDialog()
+                        ;
+                //Result will be null if the user clicked cancel or closed the dialog w/o OK
+                if (newFile == null) {
+                    System.out.println("new file is null");
+                    StatusDisplayer.getDefault().setStatusText("Couldn't write file!");
+                    return;
+                }
+
+                MidiPlayer midiPlayer = new MidiPlayer(set.getLen(), false);
+                midiPlayer.addTrack(set);
+                System.out.println("Trying to save file "+newFile.getPath());
+                try {
+                    int numBytes = MidiSystem.write(midiPlayer.getSequence(), 1, newFile);
+                    //MidiSystem.write(midiPlayer.getSequence(),1,file);
+                    if( numBytes > 0 ) {
+                        System.out.println( "Wrote "+numBytes+" bytes to "+newFile.getPath());
+                        StatusDisplayer.getDefault().setStatusText("Saved file "+newFile.getPath());
+                    } else {
+                        System.out.println("Couldn't write file "+newFile.getPath());
+                        StatusDisplayer.getDefault().setStatusText("Couldn't write file!");
+                    }
+                } catch( IOException e ) {
+                    System.out.println( "Error writing midi sequence to file: " + e.toString() );
+                    StatusDisplayer.getDefault().setStatusText("Couldn't write file!");
+                }
+            }
+        }
+ 
+        SetViewerTopComponent tc() {
+            return SetViewerTopComponent.this;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj instanceof SetSavable) {
+                SetSavable m = (SetSavable)obj;
+                return tc() == m.tc();
+            }
+            return false;
+        }
+
+        @Override
+        public int hashCode() {
+            return tc().hashCode();
+        }
+
+        /*
+        @Override
+        public void paintIcon(Component c, Graphics g, int x, int y) {
+            ICON.paintIcon(c, g, x, y);
+        }
+
+        @Override
+        public int getIconWidth() {
+            return ICON.getIconWidth();
+        }
+
+        @Override
+        public int getIconHeight() {
+            return ICON.getIconHeight();
+        }
+        */
     }
 }

@@ -39,7 +39,7 @@ public class SetItemNode extends AbstractNode implements PropertyChangeListener 
             ic.add(setItem);
         }
         */
-        getCookieSet().assign(SaveAsCapable.class, setItem);
+        //getCookieSet().assign(SaveAsCapable.class, setItem);
     }
     
     /*

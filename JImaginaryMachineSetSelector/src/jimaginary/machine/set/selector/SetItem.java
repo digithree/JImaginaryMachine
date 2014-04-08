@@ -6,28 +6,11 @@
 
 package jimaginary.machine.set.selector;
 
-import com.digithree.codecs.midi.MidiPlayer;
-import com.jimaginary.machine.api.Set;
-import com.jimaginary.machine.api.SetData;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import javax.sound.midi.MidiSystem;
-import org.netbeans.spi.actions.AbstractSavable;
-import org.openide.filesystems.FileObject;
-import org.openide.filesystems.FileUtil;
-import org.openide.loaders.SaveAsCapable;
-import org.openide.util.Lookup;
-import org.openide.util.lookup.InstanceContent;
-import org.openide.windows.TopComponent;
-import org.openide.windows.WindowManager;
-
 /**
  *
  * @author simonkenny
  */
-public class SetItem implements SaveAsCapable {//extends AbstractSavable implements SaveAsCapable {
+public class SetItem  {//extends AbstractSavable implements SaveAsCapable {
     private final String name;
     
     public SetItem() {
@@ -74,6 +57,7 @@ public class SetItem implements SaveAsCapable {//extends AbstractSavable impleme
     }
     */
 
+    /*
     @Override
     public void saveAs(FileObject folder, String filename) throws IOException {
         System.out.println("SetItem:saveAs for "+name);
@@ -99,4 +83,5 @@ public class SetItem implements SaveAsCapable {//extends AbstractSavable impleme
         }
         
     }
+    */
 }

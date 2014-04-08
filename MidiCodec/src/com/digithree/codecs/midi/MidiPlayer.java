@@ -33,7 +33,12 @@ public class MidiPlayer {
 
     public MidiPlayer(int _phraseLength) {
         phraseLength = _phraseLength;
-        initalised = addClickTrack();
+        initalised = init(true);
+    }
+    
+    public MidiPlayer(int _phraseLength, boolean withClickTrack) {
+        phraseLength = _phraseLength;
+        initalised = init(withClickTrack);
     }
 
     public Sequence getSequence() {
@@ -74,7 +79,7 @@ public class MidiPlayer {
         }
     }
 
-    private boolean addClickTrack() {
+    private boolean init(boolean createClickTrack) {
         try {
             sequencer = javax.sound.midi.MidiSystem.getSequencer();
         } catch (MidiUnavailableException e) {
@@ -96,43 +101,48 @@ public class MidiPlayer {
             sequence = new javax.sound.midi.Sequence(javax.sound.midi.Sequence.PPQ,4);
         } catch( InvalidMidiDataException e ) {
             System.err.println("Caught InvalidMidiDataException: " + e.getMessage());
+            return false;
         }
-        int ticksPerBeat = sequence.getResolution();
+        
+        if( createClickTrack ) {
+            int ticksPerBeat = sequence.getResolution();
+            
+            Track clickTrack = sequence.createTrack();
 
-        Track clickTrack = sequence.createTrack();
-
-        for( int i = 0 ; i < phraseLength ; i++ ) {
+            for( int i = 0 ; i < phraseLength ; i++ ) {
+                try {
+                    MidiEvent offEvent = new MidiEvent((MidiMessage)new ShortMessage(ShortMessage.NOTE_OFF,9,MIDI_CLICK_SOUND,0),ticksPerBeat*i);
+                    clickTrack.add(offEvent);
+                } catch( InvalidMidiDataException e ) {
+                    System.err.println("Caught InvalidMidiDataException: " + e.getMessage());
+                    return false;
+                }
+                try {		
+                    MidiEvent onEvent = new MidiEvent((MidiMessage)new ShortMessage(ShortMessage.NOTE_ON,9,MIDI_CLICK_SOUND,60),ticksPerBeat*i);
+                    clickTrack.add(onEvent);
+                } catch( InvalidMidiDataException e ) {
+                    System.err.println("Caught InvalidMidiDataException: " + e.getMessage());
+                    return false;
+                }
+            }
             try {
-                MidiEvent offEvent = new MidiEvent((MidiMessage)new ShortMessage(ShortMessage.NOTE_OFF,9,MIDI_CLICK_SOUND,0),ticksPerBeat*i);
+                MidiEvent offEvent = new MidiEvent((MidiMessage)new ShortMessage(ShortMessage.NOTE_OFF,9,MIDI_CLICK_SOUND,0),ticksPerBeat*phraseLength);
                 clickTrack.add(offEvent);
             } catch( InvalidMidiDataException e ) {
                 System.err.println("Caught InvalidMidiDataException: " + e.getMessage());
                 return false;
             }
+
             try {		
-                MidiEvent onEvent = new MidiEvent((MidiMessage)new ShortMessage(ShortMessage.NOTE_ON,9,MIDI_CLICK_SOUND,60),ticksPerBeat*i);
-                clickTrack.add(onEvent);
+                sequencer.setSequence(sequence);
             } catch( InvalidMidiDataException e ) {
                 System.err.println("Caught InvalidMidiDataException: " + e.getMessage());
                 return false;
             }
+            
+            sequencer.setLoopStartPoint(0);
+            sequencer.setLoopEndPoint(ticksPerBeat*phraseLength);
         }
-        try {
-            MidiEvent offEvent = new MidiEvent((MidiMessage)new ShortMessage(ShortMessage.NOTE_OFF,9,MIDI_CLICK_SOUND,0),ticksPerBeat*phraseLength);
-            clickTrack.add(offEvent);
-        } catch( InvalidMidiDataException e ) {
-            System.err.println("Caught InvalidMidiDataException: " + e.getMessage());
-            return false;
-        }
-
-        try {		
-            sequencer.setSequence(sequence);
-        } catch( InvalidMidiDataException e ) {
-            System.err.println("Caught InvalidMidiDataException: " + e.getMessage());
-            return false;
-        }
-        sequencer.setLoopStartPoint(0);
-        sequencer.setLoopEndPoint(ticksPerBeat*phraseLength);
         return true;
     }
 
@@ -202,6 +212,11 @@ public class MidiPlayer {
             System.err.println("Caught InvalidMidiDataException: " + e.getMessage());
             return false;
         }
+        
+        sequencer.setLoopStartPoint(0);
+        sequencer.setLoopEndPoint(ticksPerBeat*phraseLength);
+            
+            
         return true;
     }
 }
