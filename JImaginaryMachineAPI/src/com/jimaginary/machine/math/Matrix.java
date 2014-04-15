@@ -45,20 +45,20 @@ public final class Matrix {
 
     // display
     public void display() {
-            if( sizeX <= 0 || sizeY <= 0 ) {
-                    System.out.println( "Matrix empty!" );
-                    return;
-            }
-            System.out.println( "Size "+sizeY+" x "+sizeX);
-            for( int i = 0 ; i < (sizeX*sizeY) ; i++ ) {
-                    if( i != 0 && i % sizeX == 0 ) {
-                            System.out.print( "\n" );
-                    } else if( i != 0 ) {
-                            System.out.print( "\t" );
-                    }
-                    System.out.print( String.format("%.2f",elements[i]) );
-            }
-            System.out.print("\n");
+        if( sizeX <= 0 || sizeY <= 0 ) {
+                System.out.println( "Matrix empty!" );
+                return;
+        }
+        System.out.println( "Size "+sizeY+" x "+sizeX);
+        for( int i = 0 ; i < (sizeX*sizeY) ; i++ ) {
+                if( i != 0 && i % sizeX == 0 ) {
+                        System.out.print( "\n" );
+                } else if( i != 0 ) {
+                        System.out.print( "\t" );
+                }
+                System.out.print( String.format("%.2f",elements[i]) );
+        }
+        System.out.print("\n");
     }
 
     // add special marker at (y,x) element
@@ -80,6 +80,25 @@ public final class Matrix {
                     }
             }
             System.out.print("\n");
+    }
+    
+    @Override
+    public String toString() {
+        if( sizeX <= 0 || sizeY <= 0 ) {
+            System.out.println( "Matrix empty!" );
+            return null;
+        }
+        String str = ""+sizeY+"\n"+sizeX+"\n";
+        for( int i = 0 ; i < (sizeX*sizeY) ; i++ ) {
+            if( i != 0 && i % sizeX == 0 ) {
+                    str += "\n";
+            } else if( i != 0 ) {
+                    str += "\t";
+            }
+            str += String.format("%.2f",elements[i]);
+        }
+        str += "\n";
+        return str;
     }
 
     //access

@@ -5,15 +5,17 @@
  */
 package com.jimaginary.machine.graph.viewer;
 
+import com.jimaginary.machine.api.ConsoleWindowOut;
 import com.jimaginary.machine.api.Graph;
 import com.jimaginary.machine.api.GraphData;
 import com.jimaginary.machine.api.GraphNode;
 import com.jimaginary.machine.api.GraphNodeInfo;
 import com.jimaginary.machine.math.Matrix;
 import java.awt.Point;
-import java.awt.Stroke;
 import java.awt.event.KeyEvent;
 import java.beans.PropertyVetoException;
+import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
@@ -26,6 +28,7 @@ import org.netbeans.api.visual.action.ConnectProvider;
 import org.netbeans.api.visual.action.ConnectorState;
 import org.netbeans.api.visual.action.SelectProvider;
 import org.netbeans.api.visual.action.WidgetAction;
+import org.netbeans.api.visual.vmd.VMDColorScheme;
 import org.netbeans.api.visual.vmd.VMDGraphScene;
 import org.netbeans.api.visual.vmd.VMDNodeWidget;
 import org.netbeans.api.visual.vmd.VMDPinWidget;
@@ -34,6 +37,7 @@ import org.netbeans.api.visual.widget.EventProcessingType;
 import org.netbeans.api.visual.widget.LayerWidget;
 import org.netbeans.api.visual.widget.Scene;
 import org.netbeans.api.visual.widget.Widget;
+import org.netbeans.spi.actions.AbstractSavable;
 import org.openide.DialogDisplayer;
 import org.openide.NotifyDescriptor;
 import org.openide.awt.ActionID;
@@ -41,6 +45,7 @@ import org.openide.awt.ActionReference;
 import org.openide.awt.StatusDisplayer;
 import org.openide.explorer.ExplorerManager;
 import org.openide.explorer.ExplorerUtils;
+import org.openide.filesystems.FileChooserBuilder;
 import org.openide.nodes.AbstractNode;
 import org.openide.nodes.Children;
 import org.openide.nodes.Node;
@@ -51,6 +56,8 @@ import org.openide.util.LookupEvent;
 import org.openide.util.LookupListener;
 import org.openide.windows.TopComponent;
 import org.openide.util.NbBundle.Messages;
+import org.openide.util.lookup.AbstractLookup;
+import org.openide.util.lookup.InstanceContent;
 
 /**
  * Top component which displays something.
@@ -80,12 +87,16 @@ public final class JImaginaryGraphTopComponent extends TopComponent
             implements LookupListener, ExplorerManager.Provider {
 
     private final transient ExplorerManager explorerManager = new ExplorerManager();
+    //private InstanceContent instanceContent = new InstanceContent();
     
     //private VMDGraphScene scene;
     private VMDGraphScene scene;
+    private VMDColorScheme colorScheme;
     //private LayerWidget layer;
     private LayerWidget connectionLayer;
     private final List<GraphNodeInfo> graphNodeInfos;
+    
+    //private final DummySaveNode dummySaveNode;
 
     public JImaginaryGraphTopComponent() {
         initComponents();
@@ -94,11 +105,13 @@ public final class JImaginaryGraphTopComponent extends TopComponent
         putClientProperty(TopComponent.PROP_CLOSING_DISABLED, Boolean.TRUE);
         
         associateLookup(ExplorerUtils.createLookup(explorerManager, getActionMap()));
+        //associateLookup(new AbstractLookup(instanceContent));
         
         graphNodeInfos = new ArrayList<GraphNodeInfo>();
         
         // create initial scene
-        scene = new VMDGraphScene();
+        colorScheme = new VMDImaginaryMachineColorScheme();
+        scene = new VMDGraphScene(colorScheme);
         jScrollPane.setViewportView(scene.createView());
         createScene();
         
@@ -106,6 +119,9 @@ public final class JImaginaryGraphTopComponent extends TopComponent
             updateScene(GraphData.getGraph());
         }        
         GraphData.addObserver(new GraphObserver());
+        
+        //setActivatedNodes(new Node[]{dummySaveNode = new DummySaveNode()});
+        //dummySaveNode.fire(true);
     }
     
     private GraphNodeInfo createWidgetAndNode(GraphNodeInfo info, Point loc) {
@@ -124,7 +140,7 @@ public final class JImaginaryGraphTopComponent extends TopComponent
     }
     
     private void clearScene() {
-        scene = new VMDGraphScene();
+        scene = new VMDGraphScene(colorScheme);
         jScrollPane.setViewportView(scene.createView());
         createScene();
         connectionLayer = new LayerWidget(scene);
@@ -450,8 +466,7 @@ public final class JImaginaryGraphTopComponent extends TopComponent
 
     @Override
     public void resultChanged(LookupEvent le) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    
+        // do nothing?
     }
     
     private int edgeCount = 0;
@@ -479,6 +494,9 @@ public final class JImaginaryGraphTopComponent extends TopComponent
         }
         // layout scene (uses force-directed layout)
         scene.layoutScene();
+        
+        //setActivatedNodes(new Node[]{dummySaveNode});
+        //dummySaveNode.fire(true);
     }
 
     @Override
@@ -617,6 +635,8 @@ public final class JImaginaryGraphTopComponent extends TopComponent
                     ((VMDPinWidget)target).getPinName() );
             if( result ) {
                 StatusDisplayer.getDefault().setStatusText("connection nodes: Pins connected");
+                System.out.println("pins connected: "+((VMDPinWidget)source).getPinName()
+                        + "to "+ ((VMDPinWidget)target).getPinName());
             } else {
                 //JOptionPane.showMessageDialog(null, "Couldn't connect pins");
                 StatusDisplayer.getDefault().setStatusText("connection nodes: Couldn't connect pins (visual)");
@@ -710,4 +730,113 @@ public final class JImaginaryGraphTopComponent extends TopComponent
             return State.CONSUMED;
         }
     }
+    
+    /*
+    private class GraphSavable extends AbstractSavable {  //implements Icon 
+        
+        GraphSavable() {
+            register();
+        }
+ 
+        @Override
+        protected String findDisplayName() {
+            return "Graph";
+        }
+
+        @Override
+        protected void handleSave() throws IOException {
+            tc().instanceContent.remove(this);
+            unregister();
+            // do save
+            System.out.println("GraphSavable:save");
+
+            if( GraphData.getGraph() != null ) {
+                ConsoleWindowOut.getInstance().createIO("Graph save");
+                String serialized = GraphData.getGraph().serialize();
+                System.out.println(serialized);
+                ConsoleWindowOut.getInstance().println(serialized);
+                ConsoleWindowOut.getInstance().freeIO();
+                
+                /*
+                FileSystem f = Repository.getDefault().getDefaultFileSystem();
+                FileObject o = f.getRoot().getFileObject(name);
+                */
+                
+                /*
+                
+                //The default dir to use if no value is stored
+                File home = new File (System.getProperty("user.home"));
+                //Now build a file chooser and invoke the dialog in one line of code
+                //"libraries-dir" is our unique key
+                File newFile = new FileChooserBuilder(SetItem.class)
+                        .setTitle("Save "+name)
+                        .setDefaultWorkingDirectory(home)
+                        .setApproveText("Save")
+                        .showSaveDialog()
+                        ;
+                //Result will be null if the user clicked cancel or closed the dialog w/o OK
+                if (newFile == null) {
+                    System.out.println("new file is null");
+                    StatusDisplayer.getDefault().setStatusText("Couldn't write file!");
+                    return;
+                }
+                MidiPlayer midiPlayer = new MidiPlayer(set.getLen(), false);
+                midiPlayer.addTrack(set);
+                System.out.println("Trying to save file "+newFile.getPath());
+                try {
+                    int numBytes = MidiSystem.write(midiPlayer.getSequence(), 1, newFile);
+                    //MidiSystem.write(midiPlayer.getSequence(),1,file);
+                    if( numBytes > 0 ) {
+                        System.out.println( "Wrote "+numBytes+" bytes to "+newFile.getPath());
+                        StatusDisplayer.getDefault().setStatusText("Saved file "+newFile.getPath());
+                    } else {
+                        System.out.println("Couldn't write file "+newFile.getPath());
+                        StatusDisplayer.getDefault().setStatusText("Couldn't write file!");
+                    }
+                } catch( IOException e ) {
+                    System.out.println( "Error writing midi sequence to file: " + e.toString() );
+                    StatusDisplayer.getDefault().setStatusText("Couldn't write file!");
+                }
+                
+            } else {
+                System.out.println("couldn't save!");
+            }
+        }
+ 
+        JImaginaryGraphTopComponent tc() {
+            return JImaginaryGraphTopComponent.this;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj instanceof GraphSavable) {
+                GraphSavable m = (GraphSavable)obj;
+                return tc() == m.tc();
+            }
+            return false;
+        }
+
+        @Override
+        public int hashCode() {
+            return tc().hashCode();
+        }
+        */
+
+        /*
+        @Override
+        public void paintIcon(Component c, Graphics g, int x, int y) {
+            ICON.paintIcon(c, g, x, y);
+        }
+
+        @Override
+        public int getIconWidth() {
+            return ICON.getIconWidth();
+        }
+
+        @Override
+        public int getIconHeight() {
+            return ICON.getIconHeight();
+        }
+    }
+    */
 }

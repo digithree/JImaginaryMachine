@@ -11,7 +11,7 @@ package com.jimaginary.machine.midi.phrase.node;
 import com.jimaginary.machine.api.ConsoleWindowOut;
 import com.jimaginary.machine.api.Graph;
 import com.jimaginary.machine.api.GraphNode;
-import com.jimaginary.machine.math.Poisson;
+import com.jimaginary.machine.math.ProbabilityTable;
 import com.jimaginary.machine.midi.phrase.MidiPhraseInputSetCollection;
 import java.text.ParseException;
 import java.util.logging.Level;
@@ -19,7 +19,7 @@ import java.util.logging.Logger;
 
 public class MidiKeyTypeModifyNode extends GraphNode {
     private final int PARAM_KEY_TYPE = 0;
-    //private final float[] PARAM_KEY_TYPE_PROBS = { 0.05f, 0.5f, 0.25f, 0.2f };
+    private final float[] PARAM_KEY_TYPE_PROBS = { 0.05f, 0.5f, 0.25f, 0.2f };
     private final String[] PARAM_KEY_TYPE_NAME = { "All", "Key:Any", "Key:Strong", "Key:Weak" };
     private final float mean = 1.65f;
 
@@ -28,7 +28,10 @@ public class MidiKeyTypeModifyNode extends GraphNode {
         getInfo().setParameterName(PARAM_KEY_TYPE, "Key type");
         getInfo().setParameterNumIdx(PARAM_KEY_TYPE, PARAM_KEY_TYPE_NAME.length);
         getInfo().setParameterIdxNames(PARAM_KEY_TYPE, PARAM_KEY_TYPE_NAME);
-        setParameter(PARAM_KEY_TYPE, new Poisson(mean,PARAM_KEY_TYPE_NAME.length-1) );
+        //setParameter(PARAM_KEY_TYPE, new Poisson(mean,PARAM_KEY_TYPE_NAME.length) );
+        setParameter(PARAM_KEY_TYPE, new ProbabilityTable(PARAM_KEY_TYPE_PROBS.length));
+        getParameter(PARAM_KEY_TYPE).setParameters(0,PARAM_KEY_TYPE_PROBS);
+        getParameter(PARAM_KEY_TYPE).setParamNames(0,PARAM_KEY_TYPE_NAME);
     }
 
         @Override

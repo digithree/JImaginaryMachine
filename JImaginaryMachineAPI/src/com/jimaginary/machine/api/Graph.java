@@ -13,8 +13,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Observable;
-import org.openide.windows.IOProvider;
-import org.openide.windows.InputOutput;
 
 /**
  *
@@ -227,7 +225,8 @@ public class Graph extends Observable {
         int minNodes = GraphSettings.getMinNumGraphNodes();
         int maxNodes = GraphSettings.getMaxNumGraphNodes();
         
-        InputOutput io = IOProvider.getDefault().getIO ("Graph builder", true);
+        //InputOutput io = IOProvider.getDefault().getIO ("Graph builder", true);
+        ConsoleWindowOut.getInstance().createIO("Graph builder");
         // choose number of nodes
         int numNodes = minNodes + (int)((float)(maxNodes-minNodes)*Math.random());
         ConsoleWindowOut.getInstance().println( "making " + numNodes + " random nodes (plus start node)");
@@ -364,9 +363,81 @@ public class Graph extends Observable {
                     atLeastOnePut = true;
             }
         }
+        ConsoleWindowOut.getInstance().freeIO();
         setChanged();   //observable send notification
         finishChanges();
         return atLeastOnePick & atLeastOnePut;
+    }
+
+    public String serialize() {
+        //String str = getAdjacencyMatrix().toString();
+        String str = graphNodeResourceName+"\n";
+        str += allNodes.size() + "\n";
+        for( GraphNode node : allNodes ) {
+            str += node.getInfo().serialize();
+            str += "*\n";
+        }
+        return str;
+    }
+
+    public static Graph deserialize(String str) {
+        System.out.println("Graph::deserialize");
+        String []parts = str.split("[\n\t]");
+        int count = 0;
+        String graphNodeResourceName = parts[count++];
+        System.out.println("graphNodeResourceName: "+graphNodeResourceName);
+        Graph graph = new Graph(graphNodeResourceName);
+        int numNodes = Integer.parseInt(parts[count++]);
+        System.out.println("num nodes = " + numNodes);
+        GraphNodeInfo []graphNodeInfos = new GraphNodeInfo[numNodes];
+        for( int i = 0 ; i < numNodes ; i++ ) {
+            List<String> subParts = new ArrayList<String>();
+            while( count < parts.length ) {
+                if( parts[count].equals("*")) {
+                    break;
+                } else {
+                    subParts.add(parts[count]);
+                    count++;
+                }
+            }
+            count++;
+            String []sendParts = subParts.toArray(new String[subParts.size()]);
+            graphNodeInfos[i] = GraphNodeInfo.deserialize(sendParts);
+            System.out.println("CREATED NEW GNI\n"+graphNodeInfos[i].serialize());
+        }
+        GraphNode []graphNodes = new GraphNode[numNodes];
+        // get start node from new graph, always the same
+        graphNodes[0] = graph.getAllNodes().get(0);
+        for( int i = 1 ; i < numNodes ; i++ ) {
+            graphNodes[i] = GraphResourceService.getInstance()
+                    .createGraphNodeByName(graphNodeInfos[i].getGraphNodeName());
+            graphNodes[i].getInfo().setId(i);
+            graphNodes[i].setId(i);
+        }
+        System.out.println("connecting nodes...");
+        for( int i = 0 ; i < numNodes ; i++ ) {
+            int numConnections = graphNodeInfos[i].getNumConnections();
+            System.out.println("node "+i+" has "+numConnections+" connections");
+            for( int j = 0 ; j < numConnections ; j++ ) {
+                String otherNodeStr = graphNodeInfos[i].getConnectedTo(j);
+                System.out.println("connection "+j+" is: "+otherNodeStr);
+                if( otherNodeStr != null ) {
+                    if( !otherNodeStr.equals("null") ) {
+                        String []nameParts = otherNodeStr.split("[-]");
+                        int id = Integer.parseInt(nameParts[1]);
+                        System.out.println("with id: "+id);
+                        graphNodes[i].addNext(graphNodes[id]);
+                        System.out.println("  added");
+                    }
+                } else {
+                    System.out.println("  null, so don't add");
+                }
+            }
+        }
+        for( int i = 1 ; i < numNodes ; i++ ) {
+            graph.addNode(graphNodes[i]);
+        }
+        return graph;
     }
 
     public class GraphPacket {

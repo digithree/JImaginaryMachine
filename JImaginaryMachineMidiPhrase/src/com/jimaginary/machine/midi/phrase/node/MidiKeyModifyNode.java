@@ -9,10 +9,12 @@ package com.jimaginary.machine.midi.phrase.node;
 import com.jimaginary.machine.api.ConsoleWindowOut;
 import com.jimaginary.machine.api.Graph;
 import com.jimaginary.machine.api.GraphNode;
+import com.jimaginary.machine.math.ProbabilityTable;
 import com.jimaginary.machine.math.Uniform;
 import com.jimaginary.machine.midi.phrase.MidiModalConstants;
 import com.jimaginary.machine.midi.phrase.MidiPhraseInputSetCollection;
 import java.text.ParseException;
+import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -24,7 +26,12 @@ public class MidiKeyModifyNode extends GraphNode {
         getInfo().setParameterName(PARAM_KEY, "Key");
         getInfo().setParameterNumIdx(PARAM_KEY, MidiModalConstants.NUM_KEYS);
         getInfo().setParameterIdxNames(PARAM_KEY, MidiModalConstants.KEY_NAMES);
-        setParameter(PARAM_KEY, new Uniform(MidiModalConstants.NUM_KEYS));
+        //setParameter(PARAM_KEY, new Uniform(MidiModalConstants.NUM_KEYS));
+        float []paramProbs = new float[MidiModalConstants.NUM_KEYS];
+        Arrays.fill(paramProbs, 1.f/(float)MidiModalConstants.NUM_KEYS );
+        setParameter(PARAM_KEY, new ProbabilityTable(MidiModalConstants.NUM_KEYS));
+        getParameter(PARAM_KEY).setParameters(0,paramProbs);
+        getParameter(PARAM_KEY).setParamNames(0,MidiModalConstants.KEY_NAMES);
     }
 
     @Override

@@ -47,6 +47,8 @@ public final class GraphSelectorTopComponent extends TopComponent
     private final ExplorerManager mgr = new ExplorerManager();
     //private final GraphTypeNodeFactory gtpHead;
     
+    //private final DummySaveNode dummySaveNode;
+    
     public GraphSelectorTopComponent() {
         initComponents();
         setName(Bundle.CTL_GraphSelectorTopComponent());
@@ -70,6 +72,9 @@ public final class GraphSelectorTopComponent extends TopComponent
         
         //mgr.setRootContext(new AbstractNode(Children.create(gtpHead, true)));
         mgr.setRootContext(new SelectionListItemNode());
+        //mgr.setRootContext(new DummySaveNode());
+        
+        //setActivatedNodes(new Node[]{dummySaveNode = new DummySaveNode()});
     }
 
     /**

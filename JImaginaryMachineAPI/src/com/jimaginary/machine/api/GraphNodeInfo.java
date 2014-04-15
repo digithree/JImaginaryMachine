@@ -170,4 +170,88 @@ public class GraphNodeInfo {
     public boolean isActive() {
         return active;
     }
+
+    public String serialize() {
+        String str = "";
+        /*
+        boolean active;
+        int id;
+        int type;
+        String name;
+        String []paramsAsStr;
+        String []paramsName;
+        int []paramsNumIdx;
+        String [][]paramIdxNames;
+        String []connectedTo;
+        */
+        str += name + "\n";
+        str += id + "\n";
+        str += type + "\n";
+        str += (active ? "1" : "0") + "\n";
+        str += paramsAsStr.length + "\n";
+        str += connectedTo.length + "\n";
+        if( paramsAsStr.length > 0 ) {
+            for( String s : paramsAsStr ) {
+                str += s + "\n";
+            }
+        }
+        if( paramsName.length > 0 ) {
+            for( String s : paramsName ) {
+                str += s + "\n";
+            }
+        }
+        if( connectedTo.length > 0 ) {
+            for( String s : connectedTo ) {
+                str += s + "\n";
+            }
+        }
+        if( paramIdxNames != null ) {
+            if( paramIdxNames.length > 0 ) {
+                for( int i = 0 ; i < paramIdxNames.length ; i++ ) {
+                    str += paramIdxNames[i].length + "\n";
+                    for( String s : paramIdxNames[i] ) {
+                        str += s + "\n";
+                    }
+                }
+            }
+        }
+        return str;
+    }
+
+    public static GraphNodeInfo deserialize(String []parts) {
+        int count = 0;
+        // get basic info
+        String name = parts[count++];
+        int id = Integer.parseInt(parts[count++]);
+        int type = Integer.parseInt(parts[count++]);
+        boolean active = Integer.parseInt(parts[count++]) == 1;
+        int numParameters = Integer.parseInt(parts[count++]);
+        int numConnections = Integer.parseInt(parts[count++]);
+        // create GraphNodeInfo
+        GraphNodeInfo gni = new GraphNodeInfo(id, name, type, numParameters, numConnections);
+        // fill values
+        for( int i = 0 ; i < numParameters ; i++ ) {
+            gni.setParameter(i, parts[count++]);
+        }
+        for( int i = 0 ; i < numParameters ; i++ ) {
+            gni.setParameterName(i, parts[count++]);
+        }
+        for( int i = 0 ; i < numConnections ; i++ ) {
+            gni.setConnectedTo(i, parts[count++]);
+        }
+        for( int i = 0 ; i < numParameters ; i++ ) {
+            int num = Integer.parseInt(parts[count++]);
+            if( num > 0 ) {
+                String []subParts = new String[num];
+                gni.setParameterNumIdx(i, subParts.length);
+                for( int j = 0 ; j < num ; j++ ) {
+                    subParts[j] = parts[count++];
+                }
+                gni.setParameterIdxNames(i, subParts);
+            }
+        }
+        return gni;
+    }
+    
+    
 }

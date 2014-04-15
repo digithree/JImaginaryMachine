@@ -61,6 +61,13 @@ public class GraphData {
         return observers.remove(ob);
     }
     
+    public static void removeObservers() {
+        if( graph != null ) {
+            graph.deleteObservers();
+        }
+        observers.clear();
+    }
+    
     public static GraphNode getGraphNodeById(int id) {
         if( graph != null ) {
             return graph.getNodeById(id);
