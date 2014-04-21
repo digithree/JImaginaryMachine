@@ -79,7 +79,7 @@ public class PoissonParamPropertyPanel extends javax.swing.JPanel {
         // BAR CHART
         DefaultCategoryDataset chartData = new DefaultCategoryDataset();
         if( idxNames != null ) {
-            for( int i = 0 ; i < mathFunc.getParameter(PARAM_MAX) ; i++ ) {
+            for( int i = 0 ; i < idxNames.length ; i++ ) {
                 chartData.setValue(mathFunc.probMassOrDensity((float)i),mathFunc.getParamName(PARAM_MEAN),idxNames[i]);
             }
         } else {

@@ -39,7 +39,7 @@ public class MidiRangeModifyNode extends GraphNode {
         getInfo().setParameterNumIdx(PARAM_SIZE, 3);
         getInfo().setParameterIdxNames(PARAM_OCTAVE, PARAM_OCTAVE_NAME);
         getInfo().setParameterIdxNames(PARAM_OCTAVE_RND, new String[]{"Yes","No"});
-        getInfo().setParameterIdxNames(PARAM_OCTAVE, new String[]{"1 Oct", "2 Octs", "3 Octs"});
+        getInfo().setParameterIdxNames(PARAM_SIZE, new String[]{"1 Oct", "2 Octs", "3 Octs"});
         setParameter(PARAM_OCTAVE, new Poisson(PARAM_OCTAVE_PROB_MEAN,PARAM_OCTAVE_NAME.length-1));
         setParameter(PARAM_OCTAVE_RND, new Bernoulli(PARAM_OCTAVE_PROB_RND));
         setParameter(PARAM_SIZE, new Poisson(PARAM_SIZE_PROB_MEAN,PARAM_SIZE_MAX));
