@@ -9,8 +9,8 @@ package com.jimaginary.machine.api;
 import com.jimaginary.machine.generalgraph.StartNode;
 import com.jimaginary.machine.math.Matrix;
 import com.jimaginary.machine.settings.GraphSettings;
+import java.text.ParseException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Observable;
 
@@ -55,7 +55,7 @@ public class Graph extends Observable {
     boolean valid;
     
 
-    public Graph( String graphNodeResourceName ) {
+    public Graph( String graphNodeResourceName, boolean doAddManditoryNodes ) {
         this.graphNodeResourceName = graphNodeResourceName;
         System.out.println("Constructing Graph, resPackName: "+graphNodeResourceName);
         SetCollection ioSets[] = GraphResourceService.getInstance().getIOSetCollections(graphNodeResourceName);
@@ -78,7 +78,9 @@ public class Graph extends Observable {
         // add StartNode to head
         headNode = (GraphNode)new StartNode();
         allNodes.add(headNode);
-        addManditoryNodes();
+        if( doAddManditoryNodes ) {
+            addManditoryNodes();
+        }
         setChanged();
     }
     
@@ -111,52 +113,94 @@ public class Graph extends Observable {
             allNodes.get(i-1).addNext(0,allNodes.get(i));
         }
         // disable further connections to these nodes
+        /*
         for( GraphNode node : allNodes ) {
             node.acceptsConnection = false;
         }
+        */
         System.out.println("Graph : setupManditoryNodes [end]");
     }
 
     public void addNode( GraphNode node ) {
+        System.out.print("Graph:addNode - ");
+        if( node != null ) {
+            System.out.println(node.getName());
+        } else {
+            System.out.println("null");
+        }
         allNodes.add(node);
         //observable send notification
         setChanged();
+        //finishChanges();
     }
     
     // possible problem here, creaeGraphNodeByName gets from all nodes, which
     // will mean you can add nodes from an incompatable set to this graph
     //   change createGraphNodeByName to take resPackName ?
     public GraphNodeInfo addNodeByName( String nodeName ) {
+        System.out.println("Graph:addNodeByName - "+nodeName);
         GraphNode node = GraphResourceService.getInstance().createGraphNodeByName(nodeName);
         if( node == null ) {
+            System.out.println("Graph:addNodeByName .. couldn't createGraphNodeByName");
             return null;
         }
         // else, we got a node
         allNodes.add(node);
         setChanged();
+        //finishChanges();
         return node.getInfo();
     }
     
     public boolean removeNodeByName( String nodeName ) {
-        for( int i = 0 ; i < allNodes.size() ; i++ ) {
-            if( allNodes.get(i).getName().equals(nodeName) && allNodes.get(i).getType() != GraphNode.START ) {
-                allNodes.get(i).remove();
+        System.out.println("Graph:removeNodeByName - "+nodeName);
+        boolean didRemove = false;
+        for( GraphNode node : allNodes ) {
+            if( node.getName().equals(nodeName) && node.getType() != GraphNode.START ) {
+                node.remove();
                 setChanged();
-                return true;    
+                didRemove = true;    
+            } else {
+                for( int i = 0 ; i < node.getNumConnections() ; i++ ) {
+                    if( node.getInfo().getConnectedTo(i).equals(nodeName) ) {
+                        node.getInfo().setConnectedTo(i, null);
+                    }
+                }
             }
         }
-        return false;
+        if( didRemove ) {
+            System.out.println("Graph:removeNodeByName .. removed!");
+        } else {
+            System.out.println("Graph:removeNodeByName .. couldn't remove");
+        }
+        return didRemove;
     }
     
     public boolean removeNodeById( int id ) {
-        for( int i = 0 ; i < allNodes.size() ; i++ ) {
-            if( allNodes.get(i).getId() == id && allNodes.get(i).getType() != GraphNode.START ) {
-                allNodes.get(i).remove();
+        System.out.println("Graph:removeNodeById - "+id);
+        boolean didRemove = false;
+        for( GraphNode node : allNodes ) {
+            if( node.getId() == id && node.getType() != GraphNode.START ) {
+                node.remove();
                 setChanged();
-                return true;    
+                didRemove = true;    
+            } else {
+                for( int i = 0 ; i < node.getNumConnections() ; i++ ) {
+                    if( node.getInfo().getConnectedTo(i) != null ) {
+                        String []parts = node.getInfo().getConnectedTo(i).split("[-]");
+                        int otherId = Integer.parseInt(parts[1]);
+                        if( otherId == id ) {
+                            node.getInfo().setConnectedTo(i, null);
+                        }
+                    }
+                }
             }
         }
-        return false;
+        if( didRemove ) {
+            System.out.println("Graph:removeNodeById .. removed!");
+        } else {
+            System.out.println("Graph:removeNodeById .. couldn't remove");
+        }
+        return didRemove;
     }
     
     public void finishChanges() {
@@ -165,11 +209,56 @@ public class Graph extends Observable {
 
     // reshuffle() - get rid of any gaps in id number of Nodes and sort
     private void reshuffle() {
-        GraphNode.ID_COUNT = 0;
+        // create map of ids to new ids, note index is new id
+        int []idMap = new int[allNodes.size()];
+        int replacementOffset = 500;
+        for( int i = 0 ; i < idMap.length ; i++ ) {
+            idMap[i] = allNodes.get(i).getId();
+        }
+        // offset connectedTo node ids
+        for( GraphNode node : allNodes ) {
+            for( int i = 0 ; i < node.getNumConnections() ; i++ ) {
+                String target = node.getInfo().getConnectedTo(i);
+                if( target != null ) {
+                    String parts[] = target.split("[-]");
+                    int id = Integer.parseInt(parts[1]);
+                    id += replacementOffset;
+                    target = parts[0] + "-" + id;
+                    node.getInfo().setConnectedTo(i, target);
+                }
+            }
+        }
+        // replace connectedTo node ids with new ids
+        for( GraphNode node : allNodes ) {
+            for( int i = 0 ; i < node.getNumConnections() ; i++ ) {
+                String target = node.getInfo().getConnectedTo(i);
+                if( target != null ) {
+                    System.out.println("replace node: "+target);
+                    String parts[] = target.split("[-]");
+                    int id = Integer.parseInt(parts[1]);
+                    id -= replacementOffset;
+                    for( int j = 0 ; j < idMap.length ; j++ ) {
+                        if( id == idMap[j] ) {
+                            id = j;
+                            break;
+                        }
+                    }
+                    target = parts[0] + "-" + id;
+                    node.getInfo().setConnectedTo(i, target);
+                }
+            }
+        }
+        // change main node ids
+        for( int i = 0 ; i < idMap.length ; i++ ) {
+            allNodes.get(i).setId(i);
+        }
+        GraphNode.ID_COUNT = idMap.length;
+        /*
         for( GraphNode node : allNodes ) {
             node.setId(GraphNode.ID_COUNT++);
         }
-        Collections.sort(allNodes);
+        */
+        //Collections.sort(allNodes);
     }
 
     // buildAdjacencyMatrix() - create adjacency matrix from GraphNode list
@@ -200,13 +289,30 @@ public class Graph extends Observable {
         if( !valid ) {
             return;
         }
+        // randomise parameters of all nodes
+        ConsoleWindowOut.getInstance().println("Randomising node parameters...");
+        ConsoleWindowOut.getInstance().println("");
+        for( GraphNode node : allNodes ) {
+            node.randomiseParameters();
+            System.out.println(node.getName()+" des: "+node.getDescription());
+            ConsoleWindowOut.getInstance().println(node.getName()+" :\t"+node.getDescription());
+        }
+        ConsoleWindowOut.getInstance().println("");
+        ConsoleWindowOut.getInstance().println("processing...");
         lastGraphPacket = graphPacket;
         outputSetCollection.clearSetsAndReinitialise();
         graphPacket = new GraphPacket(inputSetCollection,outputSetCollection);
         GraphNode node = headNode;
         int count = 0;
         while(node != null && count++ < GRAPH_MAX_PROCESS_STEPS ) {
-            node = node.process(graphPacket);
+            String nodeName = node.process(graphPacket);
+            node = null;
+            for( GraphNode graphNode : allNodes ) {
+                if( graphNode.getName().equals(nodeName) ) {
+                    node = graphNode;
+                    break;
+                }
+            }
             if( node == null ) {
                 System.out.println("Graph: null node, finished");
             }
@@ -214,7 +320,8 @@ public class Graph extends Observable {
         graphPacket.outputSetCollection.display();
         // add sets to SetData
         SetData.getInstance().addSets(graphPacket.outputSetCollection.getSets());
-        ConsoleWindowOut.getInstance().println("number of sets in SetData: "+SetData.getInstance().getSets().size());
+        ConsoleWindowOut.getInstance().println("");
+        ConsoleWindowOut.getInstance().println("Finished");
         graphPacket = null;
         ConsoleWindowOut.getInstance().freeIO();
     }
@@ -286,8 +393,8 @@ public class Graph extends Observable {
                 }
                 ConsoleWindowOut.getInstance().println( " ]]");
 
-                ConsoleWindowOut.getInstance().println( "Num next nodes: "+fromNode.maxNextConnections);
-                for( int i = 0 ; i < fromNode.maxNextConnections ; i++ ) {
+                ConsoleWindowOut.getInstance().println( "Num next nodes: "+fromNode.getNumConnections());
+                for( int i = 0 ; i < fromNode.getNumConnections() ; i++ ) {
                     ConsoleWindowOut.getInstance().println( "\n   setting from connection " + i + " ] ");
                     boolean done = false;
                     int tries = 0;
@@ -308,6 +415,8 @@ public class Graph extends Observable {
             }
         }
         // delete any dead nodes (nodes with nothing going to them)
+        // TODO : redo this based on adjacency matrix
+        /*
         boolean changeMade = true;
         while( changeMade ) {
             changeMade = false;
@@ -332,6 +441,7 @@ public class Graph extends Observable {
                 }
             }
         }
+                */
 
         // remove nodes which execution flow cannot possibly reach
         ConsoleWindowOut.getInstance().println( "\nverifying nodes are reachable from StartNode...");
@@ -343,9 +453,8 @@ public class Graph extends Observable {
             noChange = true;
             for(GraphNode node : allNodes) {
                 if( !verifiedNodes.contains(node) ) {
+                    removeNodeByName(node.getName());
                     ConsoleWindowOut.getInstance().println( "\tremoved "+node.getName()+", not reachable"); 
-                    node.remove();
-                    allNodes.remove(node);
                     noChange = false;
                     break;
                 }
@@ -371,6 +480,7 @@ public class Graph extends Observable {
 
     public String serialize() {
         //String str = getAdjacencyMatrix().toString();
+        reshuffle();
         String str = graphNodeResourceName+"\n";
         str += allNodes.size() + "\n";
         for( GraphNode node : allNodes ) {
@@ -380,13 +490,13 @@ public class Graph extends Observable {
         return str;
     }
 
-    public static Graph deserialize(String str) {
+    public static Graph deserialize(String str) throws ParseException {
         System.out.println("Graph::deserialize");
         String []parts = str.split("[\n\t]");
         int count = 0;
         String graphNodeResourceName = parts[count++];
         System.out.println("graphNodeResourceName: "+graphNodeResourceName);
-        Graph graph = new Graph(graphNodeResourceName);
+        Graph graph = new Graph(graphNodeResourceName,false);
         int numNodes = Integer.parseInt(parts[count++]);
         System.out.println("num nodes = " + numNodes);
         GraphNodeInfo []graphNodeInfos = new GraphNodeInfo[numNodes];
@@ -411,9 +521,11 @@ public class Graph extends Observable {
         for( int i = 1 ; i < numNodes ; i++ ) {
             graphNodes[i] = GraphResourceService.getInstance()
                     .createGraphNodeByName(graphNodeInfos[i].getGraphNodeName());
-            graphNodes[i].getInfo().setId(i);
-            graphNodes[i].setId(i);
         }
+        for( int i = 0 ; i < numNodes ; i++ ) {
+            graphNodes[i].setInfo(graphNodeInfos[i]);
+        }
+        /*
         System.out.println("connecting nodes...");
         for( int i = 0 ; i < numNodes ; i++ ) {
             int numConnections = graphNodeInfos[i].getNumConnections();
@@ -434,6 +546,7 @@ public class Graph extends Observable {
                 }
             }
         }
+                */
         for( int i = 1 ; i < numNodes ; i++ ) {
             graph.addNode(graphNodes[i]);
         }

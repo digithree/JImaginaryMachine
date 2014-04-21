@@ -134,7 +134,7 @@ public class GraphNodeInfo {
     }
     
     public boolean setConnectedTo(int idx, String targetNode) {
-        if( idx >= 0 && idx < paramsAsStr.length ) {
+        if( idx >= 0 && idx < connectedTo.length ) {
             connectedTo[idx] = targetNode;
             return true;
         }
@@ -159,6 +159,18 @@ public class GraphNodeInfo {
             }
         }
         return false;
+    }
+    
+    public boolean isConnectedAt(int idx) {
+        if( idx >= 0 && idx < connectedTo.length ) {
+            if( connectedTo[idx] != null ) {
+                if( !connectedTo[idx].equals("null") ) {
+                    return true;
+                }
+            }
+            return false;
+        }
+        return true;
     }
     
     // if active is false then node whos info this is has been removed

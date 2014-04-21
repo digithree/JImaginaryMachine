@@ -31,6 +31,8 @@
                   <Group type="102" alignment="0" attributes="0">
                       <Component id="jCheckBoxScaleSqrt" min="-2" max="-2" attributes="0"/>
                       <EmptySpace max="32767" attributes="0"/>
+                      <Component id="jZero" min="-2" max="-2" attributes="0"/>
+                      <EmptySpace max="-2" attributes="0"/>
                       <Component id="jButtonValidate" min="-2" max="-2" attributes="0"/>
                   </Group>
                   <Group type="102" attributes="0">
@@ -52,6 +54,7 @@
               <Group type="103" groupAlignment="3" attributes="0">
                   <Component id="jButtonValidate" alignment="3" min="-2" max="-2" attributes="0"/>
                   <Component id="jCheckBoxScaleSqrt" alignment="3" min="-2" max="-2" attributes="0"/>
+                  <Component id="jZero" alignment="3" min="-2" max="-2" attributes="0"/>
               </Group>
               <EmptySpace max="-2" attributes="0"/>
           </Group>
@@ -110,6 +113,16 @@
       </Properties>
       <Events>
         <EventHandler event="stateChanged" listener="javax.swing.event.ChangeListener" parameters="javax.swing.event.ChangeEvent" handler="jCheckBoxScaleSqrtStateChanged"/>
+      </Events>
+    </Component>
+    <Component class="javax.swing.JButton" name="jZero">
+      <Properties>
+        <Property name="text" type="java.lang.String" editor="org.netbeans.modules.i18n.form.FormI18nStringEditor">
+          <ResourceString bundle="com/jimaginary/machine/graph/params/Bundle.properties" key="ProbTableSlidersParamPropertyPanel.jZero.text" replaceFormat="org.openide.util.NbBundle.getMessage({sourceFileName}.class, &quot;{key}&quot;)"/>
+        </Property>
+      </Properties>
+      <Events>
+        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jZeroActionPerformed"/>
       </Events>
     </Component>
   </SubComponents>

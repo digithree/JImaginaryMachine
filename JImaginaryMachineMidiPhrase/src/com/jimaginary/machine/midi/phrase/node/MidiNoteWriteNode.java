@@ -36,7 +36,7 @@ public class MidiNoteWriteNode extends GraphNode {
 
     // override
     @Override
-    public GraphNode process( Graph.GraphPacket graphPacket ) {
+    public String process( Graph.GraphPacket graphPacket ) {
         // update parameter objects (MathFunction) if info.paramsAsStr[...] changed
         try {
             updateParametersFromInfoString();

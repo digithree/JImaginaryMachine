@@ -90,38 +90,4 @@ public class GraphData {
     public static String getLastNodeName() {
         return lastNodeName;
     }
-    
-    
-    // these are actions called by the selector level, non-working, just placeholders
-    public static int addNode() {
-        /*
-        if( currentNodeName != null ) {
-            // add the node
-            int id = Graph.addNodeByName(currentNodeName);
-            //JOptionPane.showMessageDialog(null, "Add Node: "+currentNodeName);
-            return id;
-        }
-                */
-        JOptionPane.showMessageDialog(null, "[not implemented]Couldn't add node: "+currentNodeName);
-        return -1;
-    }
-    
-    public static boolean linkNodes() {
-        if( currentNodeName != null && lastNodeName != null ) {
-            JOptionPane.showMessageDialog(null, "Link "+lastNodeName+" to "+currentNodeName);
-            return true;
-        }
-        JOptionPane.showMessageDialog(null, "Can't link nodes" );
-        return false;
-    }
-    
-    public static boolean removeNode() {
-        if( currentNodeName != null ) {
-            // do something
-            JOptionPane.showMessageDialog(null, "Remove Node: "+currentNodeName);
-            return true;
-        }
-        JOptionPane.showMessageDialog(null, "Remove Node: [null]");
-        return false;
-    }
 }

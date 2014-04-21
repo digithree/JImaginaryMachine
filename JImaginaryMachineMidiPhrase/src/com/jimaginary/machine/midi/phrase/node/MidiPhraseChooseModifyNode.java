@@ -38,7 +38,7 @@ public class MidiPhraseChooseModifyNode extends GraphNode {
     }
 
     @Override
-    public GraphNode process( Graph.GraphPacket graphPacket ) {
+    public String process( Graph.GraphPacket graphPacket ) {
         // update parameter objects (MathFunction) if info.paramsAsStr[...] changed
         try {
             updateParametersFromInfoString();

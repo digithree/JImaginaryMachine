@@ -123,7 +123,7 @@ public class SelectionListItemNode extends AbstractNode implements PropertyChang
             //ProgressHandle progressHandle = ProgressHandleFactory.createHandle("Creating graph");
             //progressHandle.switchToIndeterminate();
             //progressHandle.start();
-            boolean result = GraphData.setGraph(new Graph(obj.getResPackName()));
+            boolean result = GraphData.setGraph(new Graph(obj.getResPackName(),true));
             //progressHandle.finish();
             if( result ) {
                 if( GraphData.getGraph().isValid() ) {
@@ -157,7 +157,7 @@ public class SelectionListItemNode extends AbstractNode implements PropertyChang
             });//.start();
             progressThread.start();
                     */
-            boolean result = GraphData.setGraph(new Graph(obj.getResPackName()));
+            boolean result = GraphData.setGraph(new Graph(obj.getResPackName(),true));
             /*
             try {
                 progressThread.join();

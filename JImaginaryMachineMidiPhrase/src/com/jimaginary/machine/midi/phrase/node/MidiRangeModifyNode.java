@@ -36,7 +36,7 @@ public class MidiRangeModifyNode extends GraphNode {
         getInfo().setParameterName(PARAM_SIZE, "Num octaves");
         getInfo().setParameterNumIdx(PARAM_OCTAVE, MidiModalConstants.NUM_OCTAVES);
         getInfo().setParameterNumIdx(PARAM_OCTAVE_RND, 2);
-        getInfo().setParameterNumIdx(PARAM_SIZE, MidiModalConstants.NUM_OCTAVES);
+        getInfo().setParameterNumIdx(PARAM_SIZE, 3);
         getInfo().setParameterIdxNames(PARAM_OCTAVE, PARAM_OCTAVE_NAME);
         getInfo().setParameterIdxNames(PARAM_OCTAVE_RND, new String[]{"Yes","No"});
         getInfo().setParameterIdxNames(PARAM_OCTAVE, new String[]{"1 Oct", "2 Octs", "3 Octs"});
@@ -52,7 +52,7 @@ public class MidiRangeModifyNode extends GraphNode {
     }
 
     @Override
-    public GraphNode process( Graph.GraphPacket graphPacket ) {
+    public String process( Graph.GraphPacket graphPacket ) {
         // update parameter objects (MathFunction) if info.paramsAsStr[...] changed
         try {
             updateParametersFromInfoString();

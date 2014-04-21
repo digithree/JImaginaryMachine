@@ -16,6 +16,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.text.ParseException;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.awt.ActionRegistration;
@@ -40,7 +41,7 @@ public final class OpenFileAction implements ActionListener {
         File home = new File(System.getProperty("user.home"));
         //Now build a file chooser and invoke the dialog in one line of code
         //"user-dir" is our unique key
-        File toAdd = new FileChooserBuilder("user-dir").setTitle("Open File")
+        File toAdd = new FileChooserBuilder("user-dir").setTitle("Open Graph")
                 .setDefaultWorkingDirectory(home).setApproveText("Open").showOpenDialog();
         //Result will be null if the user clicked cancel or closed the dialog w/o OK
         if (toAdd != null) {
@@ -52,6 +53,8 @@ public final class OpenFileAction implements ActionListener {
                 GraphData.setGraph(Graph.deserialize(new String(encoded,StandardCharsets.UTF_8)));
                 GraphData.getGraph().finishChanges();
             } catch (IOException ex) {
+                Exceptions.printStackTrace(ex);
+            } catch (ParseException ex) {
                 Exceptions.printStackTrace(ex);
             }
         }

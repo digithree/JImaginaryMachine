@@ -9,6 +9,7 @@ package com.jimaginary.machine.midi.phrase.node;
 import com.jimaginary.machine.api.ConsoleWindowOut;
 import com.jimaginary.machine.api.Graph;
 import com.jimaginary.machine.api.GraphNode;
+import com.jimaginary.machine.math.Bernoulli;
 import com.jimaginary.machine.math.ConstantFunction;
 import com.jimaginary.machine.math.Poisson;
 import java.text.ParseException;
@@ -22,15 +23,15 @@ import java.util.logging.Logger;
 *              size - size of sample
 *///MidiNoteSampleNode
 public class MidiNoteSampleNode extends GraphNode {
-   final String []PARAM_JUMP_LIST = { "Random", "Previous", "Next", "+2","+3", "-2","-3" };
-   //private final float []PARAM_JUMP_PROBS = { 0.1f, 0.3f, 0.2f, 0.12f, 0.08f, 0.12f, 0.08f };
-   final float PARAM_JUMP_MEAN = 2.5f;
+   final String []PARAM_JUMP_LIST = {  "-3","-2", "Previous", "Next", "+2","+3" };
+   final float PARAM_JUMP_MEAN = 3.65f;
 
    private final int PARAM_JUMP = 0;
    private final int PARAM_SIZE = 1;
+   private final int PARAM_RND_JUMP = 2;
 
    public MidiNoteSampleNode() {
-       super("MidiNoteSampleNode",SAMPLE,2,1);
+       super("MidiNoteSampleNode",SAMPLE,3,1);
        getInfo().setParameterName(PARAM_JUMP, "Jump amount");
        getInfo().setParameterNumIdx(PARAM_JUMP, PARAM_JUMP_LIST.length);
        getInfo().setParameterIdxNames(PARAM_JUMP, PARAM_JUMP_LIST);
@@ -38,6 +39,11 @@ public class MidiNoteSampleNode extends GraphNode {
        getInfo().setParameterName(PARAM_SIZE, "Sample size");
        getInfo().setParameterNumIdx(PARAM_SIZE, 1);
        setParameter(PARAM_SIZE, new ConstantFunction(1.f) );
+       getInfo().setParameterName(PARAM_RND_JUMP, "Rnd jump");
+       getInfo().setParameterNumIdx(PARAM_RND_JUMP, 2);
+       getInfo().setParameterIdxNames(PARAM_RND_JUMP, new String[]{"Yes","No"});
+       setParameter(PARAM_RND_JUMP, new Bernoulli(0.f));
+       getParameter(PARAM_RND_JUMP).setAlwaysRandomise(true);
    }
 
    @Override
@@ -47,7 +53,7 @@ public class MidiNoteSampleNode extends GraphNode {
    }
 
    @Override
-   public GraphNode process( Graph.GraphPacket graphPacket ) {
+   public String process( Graph.GraphPacket graphPacket ) {
         // update parameter objects (MathFunction) if info.paramsAsStr[...] changed
         try {
             updateParametersFromInfoString();
@@ -57,20 +63,12 @@ public class MidiNoteSampleNode extends GraphNode {
         // process
         
        // calculate offset
-       boolean rnd = false;
+       boolean rnd = ((int)getParameter(PARAM_RND_JUMP).evaluate()) == 0;
        int offset = 0;
-       if( getParameter(PARAM_JUMP).lastValue() == 0 ) {            // random
-           rnd = true;
-       } else {
-           // if not random, then get offset from last position
-           if( getParameter(PARAM_JUMP).lastValue() == 1 ) {     // previous
-               offset = -1;
-           } else if( getParameter(PARAM_JUMP).lastValue() == 2 ) {     // next
-               offset = 1;
-           } else if( getParameter(PARAM_JUMP).lastValue() >= 3 && getParameter(PARAM_JUMP).lastValue() <= 4) {     // +2, +3
-               offset = (int)getParameter(PARAM_JUMP).lastValue() - 1;
-           } else if( getParameter(PARAM_JUMP).lastValue() >= 5 && getParameter(PARAM_JUMP).lastValue() <= 6) {     // -2, -3
-               offset = -1 * ((int)getParameter(PARAM_JUMP).lastValue() - 3);
+       if( !rnd ) {
+           offset = -3 + (int)getParameter(PARAM_JUMP).lastValue();
+           if( getParameter(PARAM_JUMP).lastValue() > 2 ) {
+               offset++;
            }
        }
        // move read head (have no effect if random chosen)

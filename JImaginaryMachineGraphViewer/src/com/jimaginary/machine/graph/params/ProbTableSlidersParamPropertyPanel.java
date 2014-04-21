@@ -110,6 +110,7 @@ public class ProbTableSlidersParamPropertyPanel extends javax.swing.JPanel imple
         jButtonValidate = new javax.swing.JToggleButton();
         jPanelForComponents = new javax.swing.JPanel();
         jCheckBoxScaleSqrt = new javax.swing.JCheckBox();
+        jZero = new javax.swing.JButton();
 
         setBackground(new java.awt.Color(255, 255, 255));
 
@@ -144,6 +145,13 @@ public class ProbTableSlidersParamPropertyPanel extends javax.swing.JPanel imple
             }
         });
 
+        org.openide.awt.Mnemonics.setLocalizedText(jZero, org.openide.util.NbBundle.getMessage(ProbTableSlidersParamPropertyPanel.class, "ProbTableSlidersParamPropertyPanel.jZero.text")); // NOI18N
+        jZero.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jZeroActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
@@ -157,6 +165,8 @@ public class ProbTableSlidersParamPropertyPanel extends javax.swing.JPanel imple
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(jCheckBoxScaleSqrt)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(jZero)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jButtonValidate))
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(jLabel1)
@@ -172,7 +182,8 @@ public class ProbTableSlidersParamPropertyPanel extends javax.swing.JPanel imple
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jButtonValidate)
-                    .addComponent(jCheckBoxScaleSqrt))
+                    .addComponent(jCheckBoxScaleSqrt)
+                    .addComponent(jZero))
                 .addContainerGap())
         );
     }// </editor-fold>//GEN-END:initComponents
@@ -186,12 +197,17 @@ public class ProbTableSlidersParamPropertyPanel extends javax.swing.JPanel imple
         updateSliders();
     }//GEN-LAST:event_jCheckBoxScaleSqrtStateChanged
 
+    private void jZeroActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jZeroActionPerformed
+        zeroParameters();
+    }//GEN-LAST:event_jZeroActionPerformed
+
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JToggleButton jButtonValidate;
     private javax.swing.JCheckBox jCheckBoxScaleSqrt;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JPanel jPanelForComponents;
+    private javax.swing.JButton jZero;
     // End of variables declaration//GEN-END:variables
 
     @Override
@@ -242,6 +258,14 @@ public class ProbTableSlidersParamPropertyPanel extends javax.swing.JPanel imple
             for( int i = 0 ; i < mathFunc.getNumParameters() ; i++ ) {
                 mathFunc.setParameter(i, mathFunc.getParameter(i)*scaleFactor);
             }
+        }
+        editor.setAsText(mathFunc.toString());
+        updateSliders();
+    }
+    
+    private void zeroParameters() {
+        for( int i = 0 ; i < mathFunc.getNumParameters() ; i++ ) {
+            mathFunc.setParameter(i, 0.f);
         }
         editor.setAsText(mathFunc.toString());
         updateSliders();

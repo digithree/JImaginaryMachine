@@ -24,26 +24,26 @@ public abstract class GraphNode implements Comparable<GraphNode> {
     public final static int CHOICE = 3;
     public final static int MODIFY = 4;
 
-    ArrayList<GraphNode> previous;
-    GraphNode []next;
-    int maxNextConnections;
+    //ArrayList<GraphNode> previous;
+    //GraphNode []next;
+    //int maxNextConnections;
     MathFunction []parameters;
-    int numParameters;
+    //int numParameters;
     // flags
     boolean acceptsConnection;
     boolean allowsSelfConnection;
     boolean valid;
     String description;
     
-    private final GraphNodeInfo info;
+    private GraphNodeInfo info;
 
     public GraphNode( String name, int type, int numParameters, int maxChildren ) {
         info = new GraphNodeInfo(ID_COUNT++,name,type,numParameters,maxChildren);
         
-        previous = new ArrayList<GraphNode>();
-        maxNextConnections = maxChildren;
-        next = new GraphNode[maxNextConnections];
-        this.numParameters = numParameters;
+        //previous = new ArrayList<GraphNode>();
+        //maxNextConnections = maxChildren;
+        //next = new GraphNode[maxNextConnections];
+        //this.numParameters = numParameters;
         parameters = new MathFunction[numParameters];
         acceptsConnection = true;
         allowsSelfConnection = false;
@@ -67,6 +67,8 @@ public abstract class GraphNode implements Comparable<GraphNode> {
     }
 
     protected boolean willAcceptConnectionFrom(GraphNode nodeTo) {
+        return willAcceptConnection();
+        /*
         if( !acceptsConnection ) {
             return false;
         }
@@ -76,6 +78,7 @@ public abstract class GraphNode implements Comparable<GraphNode> {
             }
         }
         return true;
+                */
     }
 
     protected boolean willAllowSelfConnection() {
@@ -92,27 +95,62 @@ public abstract class GraphNode implements Comparable<GraphNode> {
     }
 
     protected boolean nextNodesSet() {
+        /*
         for (GraphNode node : next) {
             if (node == null) {
                 return false;
             }
         }
-        return true;
-    }
-    
-    protected boolean nextContains(GraphNode node) {
-        for( GraphNode _node : next ) {
-            if( _node == node ) {
+                */
+        for( int i = 0; i < info.getNumConnections() ; i++ ) {
+            if( info.getConnectedTo(i) == null ) {
+                return true;
+            } else if( info.getConnectedTo(i).equals("null") ) {
                 return true;
             }
         }
         return false;
     }
     
+    protected boolean nextContains(GraphNode node) {
+        /*
+        for( GraphNode _node : next ) {
+            if( _node == node ) {
+                return true;
+            }
+        }
+        return false;
+                */
+        if( node == null ) {
+            return false;
+        }
+        for( int i = 0; i < info.getNumConnections() ; i++ ) {
+            if( info.getConnectedTo(i) != null ) {
+                if( info.getConnectedTo(i).equals(node.getName()) ) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+    
     protected int nextContainsAt(GraphNode node) {
+        /*
         for( int i = 0 ; i < next.length ; i++ ) {
             if( next[i] == node ) {
                 return i;
+            }
+        }
+        return -1;
+                */
+        if( node == null ) {
+            return -1;
+        }
+        for( int i = 0; i < info.getNumConnections() ; i++ ) {
+            if( info.getConnectedTo(i) != null ) {
+                if( info.getConnectedTo(i).equals(node.getName()) ) {
+                    return i;
+                }
             }
         }
         return -1;
@@ -121,13 +159,37 @@ public abstract class GraphNode implements Comparable<GraphNode> {
     // this method will only add next if there is a free space, unlike the
     // other method which you must supply an idx for
     public boolean addNext( GraphNode _next ) {
-        if( next != null && _next != null ) {
-            for( int i = 0 ; i < next.length ; i++ ) {
-                if( next[i] == null ) {
-                    next[i] = _next;
-                    next[i].previous.add(this);
+        if( _next != null ) {
+            for( int i = 0 ; i < info.getNumConnections() ; i++ ) {
+                //if( _next.acceptsConnection ) {
+                if( !info.isConnectedAt(i) ) {
+                    //if(  ) { //!(allowsSelfConnection && this != _next)
+                        info.setConnectedTo(i, _next.getName() );
+                        System.out.println( info.getName()+"\taddNext: added "+_next.getName()+" to next["+i+"]");
+                        return true;
+                    //} else {
+                        //System.out.println("GraphNode:addNext - self connection not allowed");
+                    //}
+                } else {
+                    System.out.println("GraphNode:addNext - already connected at "+i);
+                }
+            }
+        } else {
+            System.out.println("GraphNode:addNext - target is null");
+        }
+        return false;
+    }
+
+    protected boolean addNext( int idx, GraphNode _next ) {
+        if( _next != null && idx >= 0 && idx < info.getNumConnections() ) {
+            if( _next.acceptsConnection ) {
+                if( !(allowsSelfConnection && this != _next) ) {
+                    System.out.println( info.getName()+"\taddNext(idx): added "+_next.getName()+" to next["+idx+"]");
+                    //next[idx] = _next;
+                    //next[idx].previous.add(this);
                     // update info
-                    info.setConnectedTo(i, _next.getName() );
+                    info.setConnectedTo(idx, _next.getName() );
+                    //System.out.println( "\t info test:"+info.serialize() );
                     return true;
                 }
             }
@@ -135,25 +197,8 @@ public abstract class GraphNode implements Comparable<GraphNode> {
         return false;
     }
 
-    protected boolean addNext( int idx, GraphNode _next ) {
-        if( next != null ) {
-            if( _next != null && idx >= 0 && idx < next.length ) {
-                if( _next.acceptsConnection ) {
-                    if( !(allowsSelfConnection && this != _next) ) {
-                        System.out.println( info.getName()+"\taddNext: added "+_next.getName()+" to next["+idx+"]");
-                        next[idx] = _next;
-                        next[idx].previous.add(this);
-                        // update info
-                        info.setConnectedTo(idx, _next.getName() );
-                        return true;
-                    }
-                }
-            }
-        }
-        return false;
-    }
-
     public void remove() {
+        /*
         for( GraphNode node : previous ) {
             for( int i = 0 ; i < node.next.length ; i++ ) {
                 if( node.next[i] == this ) {
@@ -161,15 +206,19 @@ public abstract class GraphNode implements Comparable<GraphNode> {
                 }
             }
         }
+                */
+        /*
         for( GraphNode node : next ) {
             if( node != null ) {
                 node.previous.remove(this);
             }
         }
+                */
         info.setActive(false);
     }
     
     public boolean removeNextConnection( GraphNode node ) {
+        /*
         for( int i = 0 ; i < next.length ; i++ ) {
             if( next[i] == node ) {
                 node.previous.remove(this);
@@ -177,6 +226,18 @@ public abstract class GraphNode implements Comparable<GraphNode> {
                 // update info
                 info.setConnectedTo(i, null);
                 return true;
+            }
+        }
+                */
+        for( int i = 0 ; i < info.getNumConnections() ; i++ ) {
+            if( info.getConnectedTo(i) != null ) {
+                if( info.getConnectedTo(i).equals(node.getName())) {
+                    //node.previous.remove(this);
+                    //next[i] = null;
+                    // update info
+                    info.setConnectedTo(i, null);
+                    return true;
+                }
             }
         }
         return false;
@@ -190,19 +251,30 @@ public abstract class GraphNode implements Comparable<GraphNode> {
             verifiedNodes.add(this);
         }
         System.out.println( getName()+"\t\t- next nodes...");
-        for( GraphNode node : next ) {
-            if( node != null && node != this &&!verifiedNodes.contains(node) ) {
-                System.out.println( getName()+"\t\t- moving to "+node.getName());
-                ArrayList<GraphNode> nextVerifiedNodes = node.verify(verifiedNodes);
-                System.out.println( getName()+"\t\t- merging...");
-                for( GraphNode newNode : nextVerifiedNodes ) {
-                    if( !verifiedNodes.contains(newNode) ) {
-                        System.out.println( getName()+"\t\t- merged "+newNode.getName());
-                        verifiedNodes.add(newNode);
+        for( int i = 0 ; i < info.getNumConnections() ; i++ ) {
+            if( info.getConnectedTo(i) != null ) {
+                GraphNode node = null;
+                for( GraphNode graphNode : verifiedNodes ) {
+                    if( graphNode != null ) {
+                        if( graphNode.getName().equals(info.getConnectedTo(i)) ) {
+                            node = graphNode;
+                            break;
+                        }
                     }
                 }
-            } else {
-                System.out.println( getName()+"\t\t-    node doesn't exist or is self");
+                if( node != null && node != this &&!verifiedNodes.contains(node) ) {
+                    System.out.println( getName()+"\t\t- moving to "+node.getName());
+                    ArrayList<GraphNode> nextVerifiedNodes = node.verify(verifiedNodes);
+                    System.out.println( getName()+"\t\t- merging...");
+                    for( GraphNode newNode : nextVerifiedNodes ) {
+                        if( !verifiedNodes.contains(newNode) ) {
+                            System.out.println( getName()+"\t\t- merged "+newNode.getName());
+                            verifiedNodes.add(newNode);
+                        }
+                    }
+                } else {
+                    System.out.println( getName()+"\t\t-    node doesn't exist or is self");
+                }
             }
         }
         System.out.println( getName()+"\t\t- return");
@@ -210,7 +282,7 @@ public abstract class GraphNode implements Comparable<GraphNode> {
     }
 
     // override
-    public GraphNode process( Graph.GraphPacket graphPacket ) {
+    public String process( Graph.GraphPacket graphPacket ) {
         // do own processing, pass modified packet if no error
         return null;
     }
@@ -218,7 +290,7 @@ public abstract class GraphNode implements Comparable<GraphNode> {
     // IMPORTANT! all nodes must call this at the start of process(...) call
     public boolean updateParametersFromInfoString() throws ParseException {
         boolean madeChange = false;
-        for( int i = 0 ; i < numParameters ; i++ ) {
+        for( int i = 0 ; i < info.getNumParameters() ; i++ ) {
             if( !parameters[i].toString().equals(info.getParameter(i)) ) {
                 parameters[i] = MathFunctionFactory.createByParse(info.getParameter(i));
                 madeChange = true;
@@ -229,6 +301,14 @@ public abstract class GraphNode implements Comparable<GraphNode> {
     
     // accessors
     // setters
+    public void setInfo(GraphNodeInfo info) throws ParseException {
+        this.info = info;
+        // update math functions
+        for( int i = 0 ; i < info.getNumParameters() ; i++ ) {
+            parameters[i] = MathFunctionFactory.createByParse(info.getParameter(i));
+        }
+    }
+    
     protected void setId(int _id) {
         info.setId(_id);
     }
@@ -242,7 +322,7 @@ public abstract class GraphNode implements Comparable<GraphNode> {
     }
     
     public boolean setParameter(int idx, MathFunction func) {
-        if( idx >= 0 && idx < numParameters ) {
+        if( idx >= 0 && idx < info.getNumParameters() ) {
             parameters[idx] = func;
             info.setParameter(idx, func.toString());
             if( parametersAreInitialised() ) {
@@ -280,27 +360,28 @@ public abstract class GraphNode implements Comparable<GraphNode> {
     }
     
     protected String getDescription() {
+        refreshDescription();
         return description;
     }
     
     protected int getNumParameters() {
-        return numParameters;
+        return info.getNumParameters();
     }
     
     public int getNumConnections() {
-        return next.length;
+        return info.getNumConnections();
     }
     
     public MathFunction getParameter(int idx) {
-        if( idx >= 0 && idx < numParameters ) {
+        if( idx >= 0 && idx < info.getNumParameters() ) {
             return parameters[idx];
         }
         return null;
     }
     
-    public GraphNode getNext(int idx) {
-        if( idx >= 0 && idx < next.length ) {
-            return next[idx];
+    public String getNext(int idx) {
+        if( idx >= 0 && idx < info.getNumConnections() ) {
+            return info.getConnectedTo(idx);
         }
         return null;
     }

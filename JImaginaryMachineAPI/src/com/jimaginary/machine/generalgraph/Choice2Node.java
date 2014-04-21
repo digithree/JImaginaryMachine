@@ -40,7 +40,7 @@ public class Choice2Node extends GraphNode {
 
     // override
     @Override
-    public GraphNode process( Graph.GraphPacket graphPacket ) {
+    public String process( Graph.GraphPacket graphPacket ) {
         int choice = (int)getParameter(PARAM_CHOICE).evaluate();
 
         ConsoleWindowOut.getInstance().println(getName()+" \t\t- choose "+(choice==0?"A":"B"));

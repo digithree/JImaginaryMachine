@@ -36,6 +36,7 @@ public class Poisson extends MathFunction {
     
     @Override
     public float evaluate() {
+        System.out.println("Poisson:evaluate");
         float k = 0.f;
         float p = 1.f;
         do {

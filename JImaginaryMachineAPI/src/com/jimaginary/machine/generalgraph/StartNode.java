@@ -24,7 +24,7 @@ public class StartNode extends GraphNode {
 
     // don't need processing, but just for console output
     @Override
-    public GraphNode process( Graph.GraphPacket graphPacket ) {
+    public String process( Graph.GraphPacket graphPacket ) {
         ConsoleWindowOut.getInstance().println( "\n\n"+getName() +" \t\t- starting processing ");
         return getNext(0);
     }

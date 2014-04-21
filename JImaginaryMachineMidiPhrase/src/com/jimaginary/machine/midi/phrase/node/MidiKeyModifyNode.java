@@ -10,7 +10,6 @@ import com.jimaginary.machine.api.ConsoleWindowOut;
 import com.jimaginary.machine.api.Graph;
 import com.jimaginary.machine.api.GraphNode;
 import com.jimaginary.machine.math.ProbabilityTable;
-import com.jimaginary.machine.math.Uniform;
 import com.jimaginary.machine.midi.phrase.MidiModalConstants;
 import com.jimaginary.machine.midi.phrase.MidiPhraseInputSetCollection;
 import java.text.ParseException;
@@ -32,6 +31,7 @@ public class MidiKeyModifyNode extends GraphNode {
         setParameter(PARAM_KEY, new ProbabilityTable(MidiModalConstants.NUM_KEYS));
         getParameter(PARAM_KEY).setParameters(0,paramProbs);
         getParameter(PARAM_KEY).setParamNames(0,MidiModalConstants.KEY_NAMES);
+        getInfo().setParameter(PARAM_KEY, getParameter(PARAM_KEY).toString()); //manually set info
     }
 
     @Override
@@ -40,13 +40,14 @@ public class MidiKeyModifyNode extends GraphNode {
     }
 
     @Override
-    public GraphNode process( Graph.GraphPacket graphPacket ) {
+    public String process( Graph.GraphPacket graphPacket ) {
         // update parameter objects (MathFunction) if info.paramsAsStr[...] changed
         try {
             updateParametersFromInfoString();
         } catch (ParseException ex) {
             Logger.getLogger(MidiKeyModifyNode.class.getName()).log(Level.SEVERE, null, ex);
         }
+        
         // process
         if( graphPacket.inputSetCollection instanceof MidiPhraseInputSetCollection ) {
             ((MidiPhraseInputSetCollection)graphPacket.inputSetCollection).createKeyAndModeSet((int)getParameter(PARAM_KEY).lastValue(),-1);

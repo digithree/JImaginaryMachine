@@ -21,7 +21,7 @@ public class MidiKeyTypeModifyNode extends GraphNode {
     private final int PARAM_KEY_TYPE = 0;
     private final float[] PARAM_KEY_TYPE_PROBS = { 0.05f, 0.5f, 0.25f, 0.2f };
     private final String[] PARAM_KEY_TYPE_NAME = { "All", "Key:Any", "Key:Strong", "Key:Weak" };
-    private final float mean = 1.65f;
+    //private final float mean = 1.65f;
 
     public MidiKeyTypeModifyNode() {
         super("MidiKeyTypeModifyNode",MODIFY,1,1);
@@ -32,6 +32,7 @@ public class MidiKeyTypeModifyNode extends GraphNode {
         setParameter(PARAM_KEY_TYPE, new ProbabilityTable(PARAM_KEY_TYPE_PROBS.length));
         getParameter(PARAM_KEY_TYPE).setParameters(0,PARAM_KEY_TYPE_PROBS);
         getParameter(PARAM_KEY_TYPE).setParamNames(0,PARAM_KEY_TYPE_NAME);
+        getInfo().setParameter(PARAM_KEY_TYPE, getParameter(PARAM_KEY_TYPE).toString()); //manually set info
     }
 
         @Override
@@ -40,7 +41,7 @@ public class MidiKeyTypeModifyNode extends GraphNode {
     }
 
         @Override
-    public GraphNode process( Graph.GraphPacket graphPacket ) {
+    public String process( Graph.GraphPacket graphPacket ) {
         // update parameter objects (MathFunction) if info.paramsAsStr[...] changed
         try {
             updateParametersFromInfoString();

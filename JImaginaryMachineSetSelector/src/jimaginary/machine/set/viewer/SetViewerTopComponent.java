@@ -163,7 +163,9 @@ public final class SetViewerTopComponent extends TopComponent
         XYSeries series = new XYSeries("Distrbution");
         float setValues[] = set.getValues();
         for( int i = 0 ; i < setValues.length ; i++ ) {
-            series.add(i, (int)setValues[i]);
+            if( (int)setValues[i] != 0 ) {
+                series.add(i, (int)setValues[i]);
+            }
         }
         XYSeriesCollection dataset = new XYSeriesCollection();
         dataset.addSeries(series);
