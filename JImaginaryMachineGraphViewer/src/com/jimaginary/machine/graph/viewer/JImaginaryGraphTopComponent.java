@@ -467,8 +467,8 @@ public final class JImaginaryGraphTopComponent extends TopComponent
     
     public class GraphObserver implements Observer {
         @Override
-        public void update(Observable o, Object arg) {
-            updateScene((Graph)o);
+        public void update(Observable obj, Object arg) {
+            updateScene((Graph)obj);
         }
     }
     

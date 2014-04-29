@@ -154,21 +154,24 @@ public class Graph extends Observable {
     public boolean removeNodeByName( String nodeName ) {
         System.out.println("Graph:removeNodeByName - "+nodeName);
         boolean didRemove = false;
+        GraphNode removeNode = null;
         for( GraphNode node : allNodes ) {
             if( node.getName().equals(nodeName) && node.getType() != GraphNode.START ) {
-                node.remove();
-                setChanged();
+                removeNode = node;
                 didRemove = true;    
             } else {
                 for( int i = 0 ; i < node.getNumConnections() ; i++ ) {
                     if( node.getInfo().getConnectedTo(i).equals(nodeName) ) {
                         node.getInfo().setConnectedTo(i, null);
+                        System.out.println("Graph:removeNodeById ..   removed connection "+i+" from "+node.getName());
                     }
                 }
             }
         }
         if( didRemove ) {
+            allNodes.remove(removeNode);
             System.out.println("Graph:removeNodeByName .. removed!");
+            setChanged();
         } else {
             System.out.println("Graph:removeNodeByName .. couldn't remove");
         }
@@ -178,10 +181,10 @@ public class Graph extends Observable {
     public boolean removeNodeById( int id ) {
         System.out.println("Graph:removeNodeById - "+id);
         boolean didRemove = false;
+        GraphNode removeNode = null;
         for( GraphNode node : allNodes ) {
             if( node.getId() == id && node.getType() != GraphNode.START ) {
-                node.remove();
-                setChanged();
+                removeNode = node;
                 didRemove = true;    
             } else {
                 for( int i = 0 ; i < node.getNumConnections() ; i++ ) {
@@ -190,13 +193,16 @@ public class Graph extends Observable {
                         int otherId = Integer.parseInt(parts[1]);
                         if( otherId == id ) {
                             node.getInfo().setConnectedTo(i, null);
+                            System.out.println("Graph:removeNodeById ..   removed connection "+i+" from "+node.getName());
                         }
                     }
                 }
             }
         }
         if( didRemove ) {
+            allNodes.remove(removeNode);
             System.out.println("Graph:removeNodeById .. removed!");
+            setChanged();
         } else {
             System.out.println("Graph:removeNodeById .. couldn't remove");
         }

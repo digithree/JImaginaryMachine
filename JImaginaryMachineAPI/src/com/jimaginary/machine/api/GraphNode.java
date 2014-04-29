@@ -214,6 +214,7 @@ public abstract class GraphNode implements Comparable<GraphNode> {
             }
         }
                 */
+        
         info.setActive(false);
     }
     

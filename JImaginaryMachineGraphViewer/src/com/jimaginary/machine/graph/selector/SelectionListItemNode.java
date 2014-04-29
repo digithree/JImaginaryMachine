@@ -74,16 +74,16 @@ public class SelectionListItemNode extends AbstractNode implements PropertyChang
     public Image getIcon (int type) {
         if( item != null ) {
             if( item.getType() == SelectionListItem.GRAPH ) {
-                return ImageUtilities.loadImage ("resources/graphicon.png");
+                return ImageUtilities.loadImage ("graphicon.png");
             } else {
                 if( item.getType() == GraphNode.SAMPLE ) {
-                    return ImageUtilities.loadImage ("resources/inArrow.png");
+                    return ImageUtilities.loadImage ("inArrow.png");
                 } else if( item.getType() == GraphNode.WRITE ) {
-                    return ImageUtilities.loadImage ("resources/outArrow.png");
+                    return ImageUtilities.loadImage ("outArrow.png");
                 } // else don't set yet : TODO : get proper icons
             }
         }
-        return ImageUtilities.loadImage ("resources/graphicon.png");
+        return ImageUtilities.loadImage ("graphicon.png");
     }
     
     @Override
